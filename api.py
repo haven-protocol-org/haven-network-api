@@ -1,0 +1,22 @@
+import falcon
+import pymongo
+
+class SupplyResource:
+    def on_get(self, req, resp):
+        """Handles GET requests"""
+        quote = {
+            'quote': (
+                "I've always been more interested in "
+                "the future than in the past."
+            ),
+            'author': 'Grace Hopper'
+        }
+
+        resp.media = quote
+
+
+api = falcon.API()
+api.add_route('/quote', SupplyResource())
+
+#importExchangePrice()
+#main("","")

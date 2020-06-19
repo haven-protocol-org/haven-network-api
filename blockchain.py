@@ -3,6 +3,7 @@ import requests
 import json
 import pymongo 
 import math
+import re
 
 class blockchain:
   def __init__(self):
@@ -37,8 +38,8 @@ class blockchain:
     #get Lastblock in blockchain
     response = self.getLastBlockHeader()
     if response['status_code']==200:
-      lastBlock=response['text']
-      print ("Blockchain height is " + str(lastBlock['height']))
+      lastBlock=response['text']['height']-1
+      print ("Blockchain height is " + str(lastBlock))
       
     #check the last block in DB
     restart=self.mydb.blocks.find_one(sort=[( '_id', pymongo.DESCENDING )])
@@ -49,12 +50,11 @@ class blockchain:
     print ("DB height is " + str(restart))
 
     PreviousBlock=None
-    for blockHeight in range(restart,lastBlock['height']+1):
-    #for blockHeight in range(0,3):
-      print ("Import block " + str(blockHeight) + "/" + str(lastBlock['height']))
+    for blockHeight in range(restart,lastBlock+1):
+    #for blockHeight in range(15804,15808):
+      print ("Import block " + str(blockHeight) + "/" + str(lastBlock))
       params={"height":blockHeight}
       block=self.getBlock(params)
-
       myBlock={}
       myBlock['pricing_spot_record']={}
       myBlock['cumulative']={'supply':{},'supply_offshore':{}}
@@ -86,7 +86,7 @@ class blockchain:
       if 'tx_hashes' in block['text']['result']:
         myBlock['tx_hashes']=block['text']['result']['tx_hashes']
         for tx in block['text']['result']['tx_hashes']:
-          myTx=self.ParseTransaction(tx)        
+          myTx=self.ParseTransaction(tx)
           if myTx['amount_minted']>0 or myTx['amount_burnt']>0:
             myBlock['cumulative']['supply_offshore'][self.currencies[myTx['offshore_data'][0]]]-=myTx['amount_burnt']
             myBlock['cumulative']['supply_offshore'][self.currencies[myTx['offshore_data'][1]]]+=myTx['amount_minted']
@@ -115,7 +115,6 @@ class blockchain:
       if myBlock['_id']==1:
         myquery = { "_id": 0 }
         newvalues = { "$set": { "header.timestamp": myBlock['header']['timestamp'], "pricing_spot_record":myBlock['pricing_spot_record'] } }
-        print (newvalues)
         self.BlockCol.update_one(myquery, newvalues)
 
       PreviousBlock=myBlock
@@ -139,6 +138,7 @@ class blockchain:
     transaction=self.getTransaction(paramsTx)
     transactionTxt=''.join(transaction['text']['txs_as_json'])
     transactionJson=json.loads(transactionTxt)
+    
     myTx={}
     myTx['pricing_record_height']=transactionJson['pricing_record_height']
     myTx['offshore_data']=transactionJson['offshore_data']
@@ -148,7 +148,6 @@ class blockchain:
     myTx['block_timestamp']=transaction['text']['txs'][0]['block_timestamp']
     myTx['_id']=tx
     return myTx
-
 
   def getLastBlockHeader(self):
     return self.callDeamonRPC("POST","get_height")
@@ -178,9 +177,12 @@ class blockchain:
       response = requests.request(verb, self.url + "/" + query, headers=headers)    
     callback['status_code']=response.status_code
     try:
-      callback['text']=json.loads(response.text,strict=False)
+      extract=re.sub('signature": ".*[^a-zA-Z0-9].*",','signature": "",',response.text)
+      callback['text']=json.loads(extract)
     except Exception as e:
       print (e)
+      print (response.text)
+      print (extract)
       callback['text']=response.text
     
     return callback
