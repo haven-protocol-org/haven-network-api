@@ -8,9 +8,8 @@ def importExchangePrice():
 
 def batch():
   Blockchain=blockchain()
-  #Blockchain.importCurrencies()
-  #importExchangePrice()
+  Blockchain.importCurrencies()
+  importExchangePrice()
   Blockchain.scanBlockchain()
-
-
+  
 batch()
