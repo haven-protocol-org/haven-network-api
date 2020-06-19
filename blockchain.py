@@ -1,37 +1,24 @@
-import os
 import requests
 import json
-import pymongo 
 import math
 import re
+from mongodb import mongodb
 
 class blockchain:
   def __init__(self):
     self.url="http://192.168.0.9:37750"
     self.currencies={65:"XHV", 66:"xAG", 67:"xAU", 68:"xAUD", 69:"xBTC", 70:"xCAD", 71:"xCHF", 72:"xCNY", 73:"xEUR", 74:"xGBP", 75:"xJPY", 76:"xNOK", 77:"xNZD", 78:"xUSD"}
     self.currenciesConvert={'xhv':'xhv','xbtc':'btc','xusd':'usd','xag':"ag", 'xau':'xau', 'xaud':'aud', 'xcad':'cad','xchf':'chf', 'xcny':'cny', 'xeur':'eur', 'xgbp':'gbp', 'xjpy':'jpy', 'xnok':'nok', 'xnzd':'nzd'}
-    self.myclient = pymongo.MongoClient(os.environ['mongo'])
-    self.mydb = self.myclient["haven"]
-    self.BlockCol = self.mydb["blocks"]
-    self.TxCol=self.mydb["txs"]
-    self.RateCol=self.mydb["rates"]
-    self.CurrencyCol=self.mydb["currencies"]
-
+    self.mydb = mongodb()
+    
   def importCurrencies(self):
     for currency in self.currencies:
       mydict={}
       mydict['xasset']=self.currencies[currency]
       mydict['code']=self.currenciesConvert[self.currencies[currency].lower()]
       mydict['_id']=currency
-      try:
-        self.CurrencyCol.insert_one(mydict)
-      except pymongo.errors.DuplicateKeyError:
-        pass
-      except Exception as e:
-        print(type(e)) 
-        print(e.args)
-        print(e) 
-
+      self.mydb.insert_one("currencies",mydict)
+ 
   def scanBlockchain(self):
     self.importCurrencies()
         
@@ -42,7 +29,7 @@ class blockchain:
       print ("Blockchain height is " + str(lastBlock))
       
     #check the last block in DB
-    restart=self.mydb.blocks.find_one(sort=[( '_id', pymongo.DESCENDING )])
+    restart=self.mydb.find_one("blocks",sort=[( '_id', self.mydb.DESCENDING )])
     if restart is not None and '_id' in restart:
       restart=restart['_id']
     else:
@@ -75,8 +62,8 @@ class blockchain:
       for pricingRecord in myBlock['header']['pricing_record']:
         if isinstance(myBlock['header']['pricing_record'][pricingRecord],int) and myBlock['header']['pricing_record'][pricingRecord]>0 and pricingRecord.lower() in self.currenciesConvert:
           #Check for rate in RateDB
-          query={'$and': [{'to': pricingRecord.lower()} , { 'valid_from': { '$lte': myBlock['header']['timestamp']} } , { 'valid_until': { '$gte': myBlock['header']['timestamp']} }]}
-          rate=self.mydb.rates.find_one(query)
+          query={'$and': [{'to': pricingRecord.lower()} , { 'valid_from': { '$lte': myBlock['header']['timestamp']*1000} } , { 'valid_until': { '$gte': myBlock['header']['timestamp']*1000} }]}
+          rate=self.mydb.find_one("rates",query)
           if rate is not None:
             myBlock['pricing_spot_record'][pricingRecord]=rate['rate']
           else:
@@ -90,32 +77,18 @@ class blockchain:
           if myTx['amount_minted']>0 or myTx['amount_burnt']>0:
             myBlock['cumulative']['supply_offshore'][self.currencies[myTx['offshore_data'][0]]]-=myTx['amount_burnt']
             myBlock['cumulative']['supply_offshore'][self.currencies[myTx['offshore_data'][1]]]+=myTx['amount_minted']
-            
-          #Write Transaction data
-          try:
-            self.TxCol.insert_one(myTx)
-          except pymongo.errors.DuplicateKeyError:
-            pass
-          except Exception as e:
-            print(type(e)) 
-            print(e.args)
-            print(e) 
+            #Write tx data
+            self.mydb.insert_one("txs",myTx)
+
             
       #Write Block data
-      try:
-        self.BlockCol.insert_one(myBlock)
-      except pymongo.errors.DuplicateKeyError:
-        pass
-      except Exception as e:
-        print(type(e)) 
-        print(e.args)
-        print(e) 
-      
+      self.mydb.insert_one("blocks",myBlock)
+     
       #Case for Timestamp on Block Genesis
       if myBlock['_id']==1:
         myquery = { "_id": 0 }
         newvalues = { "$set": { "header.timestamp": myBlock['header']['timestamp'], "pricing_spot_record":myBlock['pricing_spot_record'] } }
-        self.BlockCol.update_one(myquery, newvalues)
+        self.mydb.update_one("blocks",myquery, newvalues)
 
       PreviousBlock=myBlock
   
@@ -123,7 +96,7 @@ class blockchain:
     blockHeight=myBlock['_id']
     if blockHeight>0:
       if PreviousBlock is None:
-        PreviousBlock=self.mydb.blocks.find_one({'_id':blockHeight-1})
+        PreviousBlock=self.mydb.find_one("blocks",{'_id':blockHeight-1})
       for currency in self.currencies:
         #loop to get all cumulative supply from previousBlock
         myBlock['cumulative']['supply'][self.currencies[currency]]=PreviousBlock['cumulative']['supply'][self.currencies[currency]]

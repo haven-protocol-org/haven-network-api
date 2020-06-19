@@ -4,14 +4,14 @@ from coingecko import coingecko
 
 def importExchangePrice():
   Coingecko=coingecko()
-  Coingecko.importExchangePrice(1)
+  Coingecko.importExchangePrice(90)
 
 
 def batch():
-  Blockchain=blockchain()
-  Blockchain.importCurrencies()
+  #Blockchain=blockchain()
+  #Blockchain.importCurrencies()
   importExchangePrice()
-  Blockchain.scanBlockchain()
+  #Blockchain.scanBlockchain()
 
 begin_time = datetime.datetime.now()
 batch()

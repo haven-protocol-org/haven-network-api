@@ -3,7 +3,7 @@ import pymongo
 
 class SupplyResource:
     def on_get(self, req, resp):
-        """Handles GET requests"""
+        
         quote = {
             'quote': (
                 "I've always been more interested in "
@@ -13,6 +13,7 @@ class SupplyResource:
         }
 
         resp.media = quote
+
 
 
 api = falcon.API()
