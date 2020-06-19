@@ -27,7 +27,6 @@ class coingecko:
           RateCol = mydb["rates"]
           valid_from=0
           for rate in rates['prices']:
-            #print(rate)
             myRate={}
             myRate['valid_from']=valid_from
             myRate['valid_until']=rate[0]
