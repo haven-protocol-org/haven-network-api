@@ -26,10 +26,11 @@ class blockchain:
     response = self.getLastBlockHeader()
     if response['status_code']==200:
       lastBlock=response['text']['height']-1
+      print ("Starting import on " + self.getNetworkName())
       print ("Blockchain height is " + str(lastBlock))
       
     #check the last block in DB
-    restart=self.mydb.find_one("blocks",sort=[( '_id', self.mydb.DESCENDING )])
+    restart=self.mydb.find_last("blocks")
     if restart is not None and '_id' in restart:
       restart=restart['_id']
     else:
@@ -37,24 +38,41 @@ class blockchain:
     print ("DB height is " + str(restart))
 
     PreviousBlock=None
-    for blockHeight in range(restart,lastBlock+1):
-    #for blockHeight in range(15804,15808):
+    #Always rescan blockchain - blocks to check if a reorg is happening
+    if restart<=50:
+      restart=0
+    else:
+      restart-=50
+    #for blockHeight in range(restart,lastBlock+1):
+    for blockHeight in range(0,50):
       print ("Import block " + str(blockHeight) + "/" + str(lastBlock))
       params={"height":blockHeight}
       block=self.getBlock(params)
+
+      #Block header and ID
       myBlock={}
       myBlock['pricing_spot_record']={}
       myBlock['cumulative']={'supply':{},'supply_offshore':{}}
+
+      myBlock['header']=block['text']['result']['block_header']
+      myBlock['_id']=block['text']['result']['block_header']['height']
+
+      #Check against DB the blockhash
+      DBHash=self.mydb.find_one("blocks",{"_id": myBlock['_id']})
+
+      if DBHash is not None and DBHash['header']['hash']!=myBlock['header']['hash']:
+        print ("Reorganize on block " + str(myBlock['_id']))
+        #We need to delete all block above _id
+        self.mydb.delete("txs",{ "block_height": {"$gte": myBlock['_id']} })
+        self.mydb.delete("blocks", {"_id": {"$gte": myBlock['_id']} })
+        if myBlock['_id']+10<lastBlock:
+          print ("Reorganize happening later. Maybe 51% attack")
 
       #Init for supply & offshore data
       for currency in self.currencies:
         myBlock['cumulative']['supply'][self.currencies[currency]]=0
         myBlock['cumulative']['supply_offshore'][self.currencies[currency]]=0
         myBlock['pricing_spot_record'][self.currencies[currency]]=0
-
-      #Block header and ID
-      myBlock['header']=block['text']['result']['block_header']
-      myBlock['_id']=block['text']['result']['block_header']['height']
 
       #Cumulative Supply
       myBlock=self.getCumulative(myBlock, PreviousBlock,block)
@@ -74,16 +92,17 @@ class blockchain:
         myBlock['tx_hashes']=block['text']['result']['tx_hashes']
         for tx in block['text']['result']['tx_hashes']:
           myTx=self.ParseTransaction(tx)
+          myTx['block_hash']=myBlock['header']['hash']
           if myTx['amount_minted']>0 or myTx['amount_burnt']>0:
             myBlock['cumulative']['supply_offshore'][self.currencies[myTx['offshore_data'][0]]]-=myTx['amount_burnt']
             myBlock['cumulative']['supply_offshore'][self.currencies[myTx['offshore_data'][1]]]+=myTx['amount_minted']
             #Write tx data
             self.mydb.insert_one("txs",myTx)
-
-            
+ 
       #Write Block data
       self.mydb.insert_one("blocks",myBlock)
-     
+
+
       #Case for Timestamp on Block Genesis
       if myBlock['_id']==1:
         myquery = { "_id": 0 }
@@ -91,7 +110,7 @@ class blockchain:
         self.mydb.update_one("blocks",myquery, newvalues)
 
       PreviousBlock=myBlock
-  
+
   def getCumulative(self,myBlock,PreviousBlock,block):
     blockHeight=myBlock['_id']
     if blockHeight>0:
@@ -113,6 +132,7 @@ class blockchain:
     transactionJson=json.loads(transactionTxt)
     
     myTx={}
+    myTx['hash']=tx
     myTx['pricing_record_height']=transactionJson['pricing_record_height']
     myTx['offshore_data']=transactionJson['offshore_data']
     myTx['amount_burnt']=transactionJson['amount_burnt']
@@ -121,6 +141,29 @@ class blockchain:
     myTx['block_timestamp']=transaction['text']['txs'][0]['block_timestamp']
     myTx['_id']=tx
     return myTx
+  
+  def getInfo(self):
+    return self.callDeamonJsonRPC("POST","get_info")
+  def isMainnet(self):
+    info=self.getInfo()
+    return info['text']['result']['mainnet']
+
+  def isStagenet(self):
+    info=self.getInfo()
+    return info['text']['result']['stagenet']
+  
+  def isTestnet(self):
+    info=self.getInfo()
+    return info['text']['result']['testnet']
+  
+  def getNetworkName(self):
+    if self.isMainnet():
+      return "Mainnet"
+    if self.isStagenet():
+      return "Stagenet"
+    if self.isTestnet():
+      return "Testnet"
+    return "Network unknown"
 
   def getLastBlockHeader(self):
     return self.callDeamonRPC("POST","get_height")

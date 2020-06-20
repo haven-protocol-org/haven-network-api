@@ -19,17 +19,16 @@ class coingecko:
 
   def importExchangePrice(self,duration=30):
     for coin in self.currenciesConvert:
-        print ("Import Currency : " + self.currenciesConvert[coin])
+        print ("Import Currency : " + self.currenciesConvert[coin] + " for the last " + str(duration) + " days.")
         url=self.url+ "coins/haven/market_chart?vs_currency=" + self.currenciesConvert[coin] + "&days="+str(duration)
         response = requests.request("get", url)
         rates=json.loads(response.text)
         if 'prices' in rates:
-          query = {'$and': [{'to':self.currenciesConvert[coin]}, {'timestamp':{'$lte': next(iter(rates['prices']))[0] }}] }
-          lastRate=self.mydb.find_one("rates",query,sort=[( '_id', self.mydb.DESCENDING )])
+          query = {'$and': [{'to':coin}, {'valid_until':{'$lt': next(iter(rates['prices']))[0] }}] }
+          lastRate=self.mydb.find_last("rates",query)
           valid_from=0
           if lastRate is not None:
             valid_from=lastRate['valid_until']
-        
           for rate in rates['prices']:
             myRate={}
             myRate['valid_from']=valid_from

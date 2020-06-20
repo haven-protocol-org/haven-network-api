@@ -1,7 +1,10 @@
 import falcon
-import pymongo
+from mongodb import mongodb
 
 class SupplyResource:
+    def __init__(self):
+        self.mydb=mongodb()
+
     def on_get(self, req, resp):
         
         quote = {
@@ -14,10 +17,16 @@ class SupplyResource:
 
         resp.media = quote
 
+class InfoResource:
+    def on_get(self, req, resp):
+        
 
+        resp.media = quote
 
 api = falcon.API()
-api.add_route('/quote', SupplyResource())
+api.add_route('/supply', SupplyResource())
+api.add_route('/info', InfoResource())
+
 
 #importExchangePrice()
 #main("","")
