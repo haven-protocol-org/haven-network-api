@@ -43,8 +43,8 @@ class blockchain:
       restart=0
     else:
       restart-=50
-    #for blockHeight in range(restart,lastBlock+1):
-    for blockHeight in range(0,50):
+    for blockHeight in range(restart,lastBlock+1):
+    #for blockHeight in range(0,50):
       print ("Import block " + str(blockHeight) + "/" + str(lastBlock))
       params={"height":blockHeight}
       block=self.getBlock(params)
