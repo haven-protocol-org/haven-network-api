@@ -34,8 +34,7 @@ class spec:
     resp.content_type = falcon.MEDIA_JSON
 
 
-supplyResource=supply.SupplyResource()
-api.add_route('/supply', supplyResource)
+
 
 infoResource=info.InfoResource()
 api.add_route('/info', infoResource)
@@ -64,8 +63,8 @@ spec = APISpec(
   ],
   )
 
-spec.components.schema('Supply', schema=supply.SupplySchema)
-spec.path(resource=supplyResource)
+#spec.components.schema('Supply', schema=supply.SupplySchema)
+
 spec.path(resource=infoResource)
 spec.path(resource=spotPricingResource)
 spec.path(resource=mAPricingResource)

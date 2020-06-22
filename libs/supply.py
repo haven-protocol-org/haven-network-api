@@ -18,48 +18,6 @@ from marshmallow import Schema, fields
 
 import calendar 
 
-class SupplyResource:
-    def __init__(self):
-        self.mydb=mongodb.Mongodb()
-
-    @cache.cached(timeout=10)
-    def on_get(self, req, resp):
-        """Get current supply on blockchain.
-        ---
-        description: Get current supply on blockchain
-        responses:
-            200:
-                description: Supply for all xAssets and XHV will be return
-                schema: SupplySchema
-        """
-        dt_object = datetime.now()
-        if 'timestamp' in req.params:
-          try:
-              dt_object = datetime.utcfromtimestamp(int(req.params['timestamp']))
-          except TypeError as e:
-              #Timestamp not valid, revert to now()
-              print (e)
-              dt_object = datetime.now()
-          except Exception:
-              resp.status=falcon.HTTP_401
-              return 
-   
-        block=self.mydb.find_last("blocks",{'header.timestamp':{'$lte':dt_object}})
-        response={}
-        response['prices']=block['cumulative']
-        response['timestamp']=timestamp
-        response['block_timestamp']=block['header']['timestamp']
-        
-        resp.body = json.dumps(response)
-        resp.status=falcon.HTTP_200
-        resp.content_type = falcon.MEDIA_JSON
-
-
-class SupplySchema(Schema):
-    id = fields.Int()
-    name = fields.Str(required=True)
-
-
 
 class CirculationSupplyResource:
     def __init__(self):
@@ -67,7 +25,7 @@ class CirculationSupplyResource:
         self.tools=libs.utils.tools()
         self.currencies=self.mydb.find("currencies")
     
-    @cache.cached(timeout=10)
+    #@cache.cached(timeout=10)
     def on_get(self, req, resp):
         #If an end timestamp is specified, use this one, or timestamp=now()
         nbDatapoints=50
@@ -99,7 +57,7 @@ class CirculationSupplyResource:
         #We need ~100 pts of data, so each points will be seperated by ts_diff/100
         ts_diff = (ts_to-ts_from)/nbDatapoints #time elasped between start & end.
         print ("start : " +str (ts_from))
-        payload={'data':[],'ykeys':[],'organic':[],'donut':[]}
+        payload={'supply_coins':[],'ykeys':[],'organic_coins':[],'breakdown_coins':[],'supply_value':[],'organic_value':[],'breakdown_value':[]}
         for currency in self.currencies:
             payload['ykeys'].append("'" + currency['xasset'] + "'" )
         
@@ -110,6 +68,12 @@ class CirculationSupplyResource:
             TmpBlockOrganic={}
             TmpBlockOrganic['offshore']=0
             totalCoins=0
+
+            TmpBlockValue={}
+            TmpBlockOrganicValue={}
+            TmpBlockOrganicValue['offshore']=0
+            totalValue=0
+
             print ("Point  : " + str(x) +  " on "  + str(nbDatapoints))
             
             query={'header.timestamp':{'$lte':dt_target}}
@@ -117,29 +81,47 @@ class CirculationSupplyResource:
             block=self.mydb.find_last("blocks",query)
             if block is not None:
                 TmpBlock['period']=dt_target.strftime("%Y-%m-%d %H:%M")
+                TmpBlockValue['period']=dt_target.strftime("%Y-%m-%d %H:%M")
                 TmpBlockOrganic['period']=TmpBlock['period']
+                TmpBlockOrganicValue['period']=TmpBlock['period']
                 self.currencies.rewind()
                 for currency in self.currencies:
                     TmpBlock[currency['xasset']]=self.tools.calcMoneroPow(block['cumulative']['supply_offshore'][currency['xasset']])
-                    totalCoins+=TmpBlock[currency['xasset']]
                     if currency['xasset']=='XHV':
+                        TmpBlockValue[currency['xasset']]=self.tools.calcMoneroPow(block['cumulative']['supply_offshore'][currency['xasset']])*self.tools.calcMoneroPow(block['pricing_spot_record']['xUSD'])
+                    else:
+                        TmpBlockValue[currency['xasset']]=TmpBlock[currency['xasset']]
+                    totalCoins+=TmpBlock[currency['xasset']]
+                    totalValue+=TmpBlockValue[currency['xasset']]
+                    if currency['xasset']=='XHV':
+                        #Coins
                         TmpBlockOrganic['supply']=self.tools.calcMoneroPow(block['cumulative']['supply'][currency['xasset']])
                         TmpBlockOrganic['offshore']+=self.tools.calcMoneroPow(block['cumulative']['supply_offshore'][currency['xasset']])
+                        #Value
+                        TmpBlockOrganicValue['supply']=self.tools.calcMoneroPow(block['cumulative']['supply'][currency['xasset']])*self.tools.calcMoneroPow(block['pricing_spot_record']['xUSD'])
+                        TmpBlockOrganicValue['offshore']+=self.tools.calcMoneroPow(block['cumulative']['supply_offshore'][currency['xasset']])*self.tools.calcMoneroPow(block['pricing_spot_record']['xUSD'])
 
-                payload['data'].append(TmpBlock)
-                payload['organic'].append(TmpBlockOrganic)
-
+                payload['supply_coins'].append(TmpBlock)
+                payload['supply_value'].append(TmpBlockValue)
+                payload['organic_coins'].append(TmpBlockOrganic)
+                payload['organic_value'].append(TmpBlockOrganicValue)
         self.currencies.rewind()
         for currency in self.currencies:
             donutBlock={}
+            donutBlockValue={}
             if currency['xasset'] in TmpBlock and TmpBlock[currency['xasset']]>0:
                 donutBlock['label']=currency['xasset']
+                donutBlockValue['label']=currency['xasset']
                 if currency['xasset']=='XHV':
                     donutBlock['value']=math.ceil((TmpBlock[currency['xasset']]/totalCoins)*100)
+                    donutBlockValue['value']=math.ceil((TmpBlockValue[currency['xasset']]/totalValue)*100)
                 else:
                     donutBlock['value']=math.floor((TmpBlock[currency['xasset']]/totalCoins)*100)
+                    donutBlockValue['value']=math.floor((TmpBlockValue[currency['xasset']]/totalValue)*100)
                 print (donutBlock)
-                payload['donut'].append(donutBlock)
+                payload['breakdown_coins'].append(donutBlock)
+                payload['breakdown_value'].append(donutBlockValue)
+                
         
         
         print ("end : " +str (ts_to))
