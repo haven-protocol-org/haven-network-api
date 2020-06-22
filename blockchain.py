@@ -3,16 +3,14 @@ import json
 import math
 import re
 import os
-from mongodb import mongodb
+import mongodb
 from datetime import datetime
-class blockchain:
+class Blockchain:
   def __init__(self):
     self.url=os.environ['daemon_url']
-
-    
     self.currencies={65:"XHV", 66:"xAG", 67:"xAU", 68:"xAUD", 69:"xBTC", 70:"xCAD", 71:"xCHF", 72:"xCNY", 73:"xEUR", 74:"xGBP", 75:"xJPY", 76:"xNOK", 77:"xNZD", 78:"xUSD"}
     self.currenciesConvert={'xhv':'xhv','xbtc':'btc','xusd':'usd','xag':"ag", 'xau':'xau', 'xaud':'aud', 'xcad':'cad','xchf':'chf', 'xcny':'cny', 'xeur':'eur', 'xgbp':'gbp', 'xjpy':'jpy', 'xnok':'nok', 'xnzd':'nzd'}
-    self.mydb = mongodb()
+    self.mydb = mongodb.Mongodb()
     
   def importCurrencies(self):
     for currency in self.currencies:
@@ -85,8 +83,8 @@ class blockchain:
         for pricingRecord in myBlock['header']['pricing_record']:
           if isinstance(myBlock['header']['pricing_record'][pricingRecord],int) and myBlock['header']['pricing_record'][pricingRecord]>0 and pricingRecord.lower() in self.currenciesConvert:
             #Check for rate in RateDB
-            query={'$and': [{'to': pricingRecord.lower()} , { 'valid_from': { '$lte': myBlock['header']['timestamp']} } , { 'valid_until': { '$gte': myBlock['header']['timestamp']} }]}
-            rate=self.mydb.find_one("rates",query)
+            query={'$and': [{'to': pricingRecord.lower()} , { 'valid_from': { '$lte': myBlock['header']['timestamp']} }]}
+            rate=self.mydb.find_last("rates",query)
             if rate is not None:
               myBlock['pricing_spot_record'][pricingRecord]=rate['rate']
             else:

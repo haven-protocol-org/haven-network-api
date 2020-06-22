@@ -2,15 +2,15 @@ import os
 import requests
 import json
 import math
-from mongodb import mongodb
+import mongodb
 from datetime import datetime
 
-class coingecko:
+class Coingecko:
   def __init__(self):
     self.url='https://api.coingecko.com/api/v3/'
     self.coin='haven'
     self.currenciesConvert={'xhv':'xhv','xbtc':'btc','xusd':'usd','xag':"xag", 'xau':'xau', 'xaud':'aud', 'xcad':'cad','xchf':'chf', 'xcny':'cny', 'xeur':'eur', 'xgbp':'gbp', 'xjpy':'jpy', 'xnok':'nok', 'xnzd':'nzd'}
-    self.mydb = mongodb()
+    self.mydb= mongodb.Mongodb()
 
   def getlastrate(self,coin, currency):
     url=self.url+"simple/price?ids="+coin+ "&vs_currencies=" + currency

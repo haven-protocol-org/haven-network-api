@@ -1,8 +1,8 @@
 import falcon
 import json 
 
-from blockchain import blockchain
-from mongodb import mongodb
+import blockchain
+import mongodb
 from datetime import datetime
 from datetime import timezone
 from apispec import APISpec
@@ -13,7 +13,7 @@ import calendar
 
 class InfoResource:
     def __init__(self):
-        self.bc=blockchain()
+        self.bc=blockchain.Blockchain()
     def on_get(self, req, resp):
         resp.body =json.dumps(self.bc.getInfo()['text'], ensure_ascii=False)
         resp.status=falcon.HTTP_200

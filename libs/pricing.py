@@ -2,7 +2,7 @@ import falcon
 import json 
 from datetime import datetime
 from datetime import timezone
-from mongodb import mongodb
+import mongodb
 
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
@@ -14,7 +14,7 @@ import calendar
 
 class MAPricingResource:
     def __init__(self):
-        self.mydb=mongodb()
+        self.mydb=mongodb.Mongodb()
     def on_get(self, req, resp):
         dt_object = datetime.now()
         if 'timestamp' in req.params:
@@ -40,7 +40,7 @@ class MAPricingResource:
 
 class SpotPricingResource:
     def __init__(self):
-        self.mydb=mongodb()
+        self.mydb=mongodb.Mongodb()
 
     def on_get(self, req, resp):
         dt_object = datetime.now()

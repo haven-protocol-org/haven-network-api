@@ -1,11 +1,14 @@
 import falcon
+from falcon_caching import Cache
+cache = Cache(config={'CACHE_TYPE': 'simple'})
+
 import json 
 import libs.utils
 from datetime import datetime
 from datetime import timezone
 from dateutil.relativedelta import relativedelta
 
-from mongodb import mongodb
+import mongodb
 
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
@@ -17,8 +20,10 @@ import calendar
 
 class DeviationHistoryResource:
     def __init__(self):
-        self.mydb=mongodb()
+        self.mydb=mongodb.Mongodb()
         self.tools=libs.utils.tools()
+    
+    @cache.cached(timeout=10)
     def on_get(self, req, resp):
         #If an end timestamp is specified, use this one, or timestamp=now()
         currency=req.params['currency']

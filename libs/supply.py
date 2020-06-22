@@ -1,4 +1,7 @@
 import falcon
+from falcon_caching import Cache
+cache = Cache(config={'CACHE_TYPE': 'simple'})
+
 import json 
 import libs.utils
 import math
@@ -6,7 +9,7 @@ from datetime import datetime
 from datetime import timezone
 from dateutil.relativedelta import relativedelta
 
-from mongodb import mongodb
+import mongodb
 
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
@@ -17,7 +20,9 @@ import calendar
 
 class SupplyResource:
     def __init__(self):
-        self.mydb=mongodb()
+        self.mydb=mongodb.Mongodb()
+
+    @cache.cached(timeout=10)
     def on_get(self, req, resp):
         """Get current supply on blockchain.
         ---
@@ -58,9 +63,11 @@ class SupplySchema(Schema):
 
 class CirculationSupplyResource:
     def __init__(self):
-        self.mydb=mongodb()
+        self.mydb=mongodb.Mongodb()
         self.tools=libs.utils.tools()
         self.currencies=self.mydb.find("currencies")
+    
+    @cache.cached(timeout=10)
     def on_get(self, req, resp):
         #If an end timestamp is specified, use this one, or timestamp=now()
         nbDatapoints=50

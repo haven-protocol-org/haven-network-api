@@ -2,11 +2,11 @@ import datetime
 import tempfile
 import pid
 
-from blockchain import blockchain
-from coingecko import coingecko
+import blockchain
+import coingecko
 
 def importExchangePrice(duration):
-  Coingecko=coingecko()
+  Coingecko=coingecko.Coingecko()
   Coingecko.importExchangePrice(duration)
 
 
@@ -14,12 +14,12 @@ def batch():
   try:
     with pid.PidFile('havenImport') as p:
       print ("Starting process " + str(p))
-      Blockchain=blockchain()
-      Blockchain.importCurrencies()
+      bc=blockchain.Blockchain()
+      bc.importCurrencies()
       importExchangePrice(365*3)
       importExchangePrice(90)
       importExchangePrice(2)
-      Blockchain.scanBlockchain()
+      bc.scanBlockchain()
   except pid.PidFileError:
     print ("Traitement déjà lancé")
   except Exception as e:

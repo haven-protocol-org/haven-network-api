@@ -2,7 +2,7 @@ import pymongo
 import os
 
 
-class mongodb:
+class Mongodb:
   def __init__(self):
       self.myclient = pymongo.MongoClient(os.environ['mongo'])
       self.mydb = self.myclient[os.environ['dbname']]

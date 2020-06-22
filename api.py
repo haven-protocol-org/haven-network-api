@@ -1,16 +1,16 @@
 import falcon
 from falcon_cors import CORS
+from falcon_caching import Cache
+cache = Cache(config={'CACHE_TYPE': 'simple'})
+
 
 import json 
 from datetime import datetime
 from datetime import timezone
-from mongodb import mongodb
-from blockchain import blockchain
+
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 from falcon_apispec import FalconPlugin
-
-
 
 from marshmallow import Schema, fields
 
@@ -19,13 +19,12 @@ import libs.deviation as deviation
 import libs.pricing as pricing
 import libs.info as info
 
-
 import calendar 
 
 
 cors=CORS(allow_all_origins=True,allow_all_headers=True,  allow_all_methods=True)
 
-api = falcon.API(middleware=[cors.middleware])
+api = falcon.API(middleware=[cors.middleware,cache.middleware])
 
 class spec:
   def on_get(self, req, resp):

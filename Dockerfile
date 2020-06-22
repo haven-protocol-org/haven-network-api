@@ -5,7 +5,7 @@ ENV dbname='haven_stagenet'
 ENV daemon_url='http://host.docker.internal:37750'
 RUN apk add build-base supervisor 
 
-RUN pip install requests pymongo dnspython falcon falcon_cors falcon-marshmallow falcon_apispec gunicorn python-dateutil
+RUN pip install requests pymongo dnspython falcon falcon_cors falcon-marshmallow falcon_apispec falcon_caching gunicorn python-dateutil pid 
 
 RUN mkdir /src
 WORKDIR /src
