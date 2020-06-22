@@ -3,7 +3,7 @@ import requests
 import json
 import math
 from mongodb import mongodb
-
+from datetime import datetime
 
 class coingecko:
   def __init__(self):
@@ -31,13 +31,13 @@ class coingecko:
             valid_from=lastRate['valid_until']
           for rate in rates['prices']:
             myRate={}
-            myRate['valid_from']=valid_from
-            myRate['valid_until']=rate[0]
+            myRate['valid_from']=datetime.utcfromtimestamp(valid_from)
+            myRate['valid_until']=datetime.utcfromtimestamp(int(str(rate[0])[:10]))
             myRate['from']='xhv'
             myRate['to']=coin
             myRate['rate']=self.convertToMonero(rate[1])
             myRate['_id']=str(rate[0])+"-"+coin
-            valid_from=rate[0]
+            valid_from=int(str(rate[0])[:10])
             self.mydb.insert_one("rates",myRate)
         else:
           print ("No rates for " + coin)
@@ -47,5 +47,4 @@ class coingecko:
   def convertToMonero(self,floatNumber):
     floatNumber=floatNumber*pow(10,12)
     floatNumber=math.trunc(floatNumber)
-    floatNumber=int(str(floatNumber)[:12])
     return floatNumber

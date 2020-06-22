@@ -1,10 +1,11 @@
 import pymongo
 import os
 
+
 class mongodb:
   def __init__(self):
       self.myclient = pymongo.MongoClient(os.environ['mongo'])
-      self.mydb = self.myclient["haven"]
+      self.mydb = self.myclient[os.environ['dbname']]
 
   def delete_one(self,collection,query):
     try:
@@ -50,6 +51,18 @@ class mongodb:
       if query=="":
         query={}
       response=self.mydb[collection].find_one(query,sort=sort)
+    except Exception as e:
+      response=e.message
+      print(type(e)) 
+      print(e.args)
+      print(e.message)
+    return response
+  
+  def find(self,collection,query="",sort=""):
+    try:
+      if query=="":
+        query={}
+      response=self.mydb[collection].find(query,sort=sort)
     except Exception as e:
       response=e.message
       print(type(e)) 

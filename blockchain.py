@@ -2,11 +2,14 @@ import requests
 import json
 import math
 import re
+import os
 from mongodb import mongodb
-
+from datetime import datetime
 class blockchain:
   def __init__(self):
-    self.url="http://192.168.0.9:37750"
+    self.url=os.environ['daemon_url']
+
+    
     self.currencies={65:"XHV", 66:"xAG", 67:"xAU", 68:"xAUD", 69:"xBTC", 70:"xCAD", 71:"xCHF", 72:"xCNY", 73:"xEUR", 74:"xGBP", 75:"xJPY", 76:"xNOK", 77:"xNZD", 78:"xUSD"}
     self.currenciesConvert={'xhv':'xhv','xbtc':'btc','xusd':'usd','xag':"ag", 'xau':'xau', 'xaud':'aud', 'xcad':'cad','xchf':'chf', 'xcny':'cny', 'xeur':'eur', 'xgbp':'gbp', 'xjpy':'jpy', 'xnok':'nok', 'xnzd':'nzd'}
     self.mydb = mongodb()
@@ -44,7 +47,7 @@ class blockchain:
     else:
       restart-=50
     for blockHeight in range(restart,lastBlock+1):
-    #for blockHeight in range(0,50):
+    #for blockHeight in range(0,100):
       print ("Import block " + str(blockHeight) + "/" + str(lastBlock))
       params={"height":blockHeight}
       block=self.getBlock(params)
@@ -55,6 +58,7 @@ class blockchain:
       myBlock['cumulative']={'supply':{},'supply_offshore':{}}
 
       myBlock['header']=block['text']['result']['block_header']
+      myBlock['header']['timestamp']=datetime.utcfromtimestamp(myBlock['header']['timestamp'])
       myBlock['_id']=block['text']['result']['block_header']['height']
 
       #Check against DB the blockhash
@@ -77,15 +81,16 @@ class blockchain:
       #Cumulative Supply
       myBlock=self.getCumulative(myBlock, PreviousBlock,block)
   
-      for pricingRecord in myBlock['header']['pricing_record']:
-        if isinstance(myBlock['header']['pricing_record'][pricingRecord],int) and myBlock['header']['pricing_record'][pricingRecord]>0 and pricingRecord.lower() in self.currenciesConvert:
-          #Check for rate in RateDB
-          query={'$and': [{'to': pricingRecord.lower()} , { 'valid_from': { '$lte': myBlock['header']['timestamp']*1000} } , { 'valid_until': { '$gte': myBlock['header']['timestamp']*1000} }]}
-          rate=self.mydb.find_one("rates",query)
-          if rate is not None:
-            myBlock['pricing_spot_record'][pricingRecord]=rate['rate']
-          else:
-            print ("no rate for " + pricingRecord)
+      if 'pricing_record' in myBlock['header']:
+        for pricingRecord in myBlock['header']['pricing_record']:
+          if isinstance(myBlock['header']['pricing_record'][pricingRecord],int) and myBlock['header']['pricing_record'][pricingRecord]>0 and pricingRecord.lower() in self.currenciesConvert:
+            #Check for rate in RateDB
+            query={'$and': [{'to': pricingRecord.lower()} , { 'valid_from': { '$lte': myBlock['header']['timestamp']} } , { 'valid_until': { '$gte': myBlock['header']['timestamp']} }]}
+            rate=self.mydb.find_one("rates",query)
+            if rate is not None:
+              myBlock['pricing_spot_record'][pricingRecord]=rate['rate']
+            else:
+              print ("no rate for " + pricingRecord)
 
       #Transactions in Block
       if 'tx_hashes' in block['text']['result']:
@@ -93,7 +98,7 @@ class blockchain:
         for tx in block['text']['result']['tx_hashes']:
           myTx=self.ParseTransaction(tx)
           myTx['block_hash']=myBlock['header']['hash']
-          if myTx['amount_minted']>0 or myTx['amount_burnt']>0:
+          if ('amount_minted' in myTx and myTx['amount_minted']>0) or ('amount_burnt' in myTx and myTx['amount_burnt']>0):
             myBlock['cumulative']['supply_offshore'][self.currencies[myTx['offshore_data'][0]]]-=myTx['amount_burnt']
             myBlock['cumulative']['supply_offshore'][self.currencies[myTx['offshore_data'][1]]]+=myTx['amount_minted']
             #Write tx data
@@ -133,12 +138,17 @@ class blockchain:
     
     myTx={}
     myTx['hash']=tx
-    myTx['pricing_record_height']=transactionJson['pricing_record_height']
-    myTx['offshore_data']=transactionJson['offshore_data']
-    myTx['amount_burnt']=transactionJson['amount_burnt']
-    myTx['amount_minted']=transactionJson['amount_minted']
+    if 'pricing_record_height' in transactionJson:
+      myTx['pricing_record_height']=transactionJson['pricing_record_height']
+    if 'offshore_data' in transactionJson:
+      myTx['offshore_data']=transactionJson['offshore_data']
+    if 'amount_burnt' in transactionJson:
+      myTx['amount_burnt']=transactionJson['amount_burnt']
+    if 'amount_minted' in transactionJson:
+      myTx['amount_minted']=transactionJson['amount_minted']
+
     myTx['block_height']=transaction['text']['txs'][0]['block_height']
-    myTx['block_timestamp']=transaction['text']['txs'][0]['block_timestamp']
+    myTx['block_timestamp']=datetime.utcfromtimestamp(transaction['text']['txs'][0]['block_timestamp'])
     myTx['_id']=tx
     return myTx
   
