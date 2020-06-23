@@ -4,6 +4,7 @@ import json
 import math
 import mongodb
 from datetime import datetime
+from libs.utils import tools
 
 class Coingecko:
   def __init__(self):
@@ -11,6 +12,7 @@ class Coingecko:
     self.coin='haven'
     self.currenciesConvert={'xhv':'xhv','xbtc':'btc','xusd':'usd','xag':"xag", 'xau':'xau', 'xaud':'aud', 'xcad':'cad','xchf':'chf', 'xcny':'cny', 'xeur':'eur', 'xgbp':'gbp', 'xjpy':'jpy', 'xnok':'nok', 'xnzd':'nzd'}
     self.mydb= mongodb.Mongodb()
+    self.tools = tools()
 
   def getlastrate(self,coin, currency):
     url=self.url+"simple/price?ids="+coin+ "&vs_currencies=" + currency
@@ -35,7 +37,7 @@ class Coingecko:
             myRate['valid_until']=datetime.utcfromtimestamp(int(str(rate[0])[:10]))
             myRate['from']='xhv'
             myRate['to']=coin
-            myRate['rate']=self.convertToMonero(rate[1])
+            myRate['rate']=self.tools.convertToMoneroFormat(rate[1])
             myRate['_id']=str(rate[0])+"-"+coin
             valid_from=int(str(rate[0])[:10])
             self.mydb.insert_one("rates",myRate)
@@ -44,7 +46,4 @@ class Coingecko:
 
 
     return response
-  def convertToMonero(self,floatNumber):
-    floatNumber=floatNumber*pow(10,12)
-    floatNumber=math.trunc(floatNumber)
-    return floatNumber
+ 

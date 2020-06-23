@@ -69,8 +69,8 @@ class DeviationHistoryResource:
             block=self.mydb.find_last("blocks",query)
             if block is not None:
                 TmpBlock['period']=datetime.utcfromtimestamp(ts_target).strftime("%Y-%m-%d %H:%M")
-                TmpBlock['spot_price']=self.tools.calcMoneroPow(block['pricing_spot_record'][currency])
-                TmpBlock['ma_price']=self.tools.calcMoneroPow(block['header']['pricing_record'][currency])
+                TmpBlock['spot_price']=self.tools.convertFromMoneroFormat(block['pricing_spot_record'][currency])
+                TmpBlock['ma_price']=self.tools.convertFromMoneroFormat(block['header']['pricing_record'][currency])
                 payload.append(TmpBlock)
             #print (block)
 

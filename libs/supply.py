@@ -86,20 +86,20 @@ class CirculationSupplyResource:
                 TmpBlockOrganicValue['period']=TmpBlock['period']
                 self.currencies.rewind()
                 for currency in self.currencies:
-                    TmpBlock[currency['xasset']]=self.tools.calcMoneroPow(block['cumulative']['supply_offshore'][currency['xasset']])
+                    TmpBlock[currency['xasset']]=block['cumulative']['supply_offshore'][currency['xasset']]
                     if currency['xasset']=='XHV':
-                        TmpBlockValue[currency['xasset']]=self.tools.calcMoneroPow(block['cumulative']['supply_offshore'][currency['xasset']])*self.tools.calcMoneroPow(block['pricing_spot_record']['xUSD'])
+                        TmpBlockValue[currency['xasset']]=block['cumulative']['supply_offshore'][currency['xasset']]*self.tools.convertFromMoneroFormat(block['pricing_spot_record']['xUSD'])
                     else:
                         TmpBlockValue[currency['xasset']]=TmpBlock[currency['xasset']]
                     totalCoins+=TmpBlock[currency['xasset']]
                     totalValue+=TmpBlockValue[currency['xasset']]
                     if currency['xasset']=='XHV':
                         #Coins
-                        TmpBlockOrganic['supply']=self.tools.calcMoneroPow(block['cumulative']['supply'][currency['xasset']])
-                        TmpBlockOrganic['offshore']+=self.tools.calcMoneroPow(block['cumulative']['supply_offshore'][currency['xasset']])
+                        TmpBlockOrganic['supply']=block['cumulative']['supply'][currency['xasset']]
+                        TmpBlockOrganic['offshore']+=block['cumulative']['supply_offshore'][currency['xasset']]
                         #Value
-                        TmpBlockOrganicValue['supply']=self.tools.calcMoneroPow(block['cumulative']['supply'][currency['xasset']])*self.tools.calcMoneroPow(block['pricing_spot_record']['xUSD'])
-                        TmpBlockOrganicValue['offshore']+=self.tools.calcMoneroPow(block['cumulative']['supply_offshore'][currency['xasset']])*self.tools.calcMoneroPow(block['pricing_spot_record']['xUSD'])
+                        TmpBlockOrganicValue['supply']=block['cumulative']['supply'][currency['xasset']]*self.tools.convertFromMoneroFormat(block['pricing_spot_record']['xUSD'])
+                        TmpBlockOrganicValue['offshore']+=block['cumulative']['supply_offshore'][currency['xasset']]*self.tools.convertFromMoneroFormat(block['pricing_spot_record']['xUSD'])
 
                 payload['supply_coins'].append(TmpBlock)
                 payload['supply_value'].append(TmpBlockValue)

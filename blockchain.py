@@ -5,13 +5,14 @@ import re
 import os
 import mongodb
 from datetime import datetime
+from libs.utils import tools
 class Blockchain:
   def __init__(self):
     self.url=os.environ['daemon_url']
     self.currencies={65:"XHV", 66:"xAG", 67:"xAU", 68:"xAUD", 69:"xBTC", 70:"xCAD", 71:"xCHF", 72:"xCNY", 73:"xEUR", 74:"xGBP", 75:"xJPY", 76:"xNOK", 77:"xNZD", 78:"xUSD"}
     self.currenciesConvert={'xhv':'xhv','xbtc':'btc','xusd':'usd','xag':"ag", 'xau':'xau', 'xaud':'aud', 'xcad':'cad','xchf':'chf', 'xcny':'cny', 'xeur':'eur', 'xgbp':'gbp', 'xjpy':'jpy', 'xnok':'nok', 'xnzd':'nzd'}
     self.mydb = mongodb.Mongodb()
-    
+    self.utils = tools()
   def importCurrencies(self):
     for currency in self.currencies:
       mydict={}
@@ -97,8 +98,8 @@ class Blockchain:
           myTx=self.ParseTransaction(tx)
           myTx['block_hash']=myBlock['header']['hash']
           if ('amount_minted' in myTx and myTx['amount_minted']>0) or ('amount_burnt' in myTx and myTx['amount_burnt']>0):
-            myBlock['cumulative']['supply_offshore'][self.currencies[myTx['offshore_data'][0]]]-=myTx['amount_burnt']
-            myBlock['cumulative']['supply_offshore'][self.currencies[myTx['offshore_data'][1]]]+=myTx['amount_minted']
+            myBlock['cumulative']['supply_offshore'][self.currencies[myTx['offshore_data'][0]]]-=self.utils.convertFromMoneroFormat(myTx['amount_burnt'])
+            myBlock['cumulative']['supply_offshore'][self.currencies[myTx['offshore_data'][1]]]+=self.utils.convertFromMoneroFormat(myTx['amount_minted'])
             #Write tx data
             self.mydb.insert_one("txs",myTx)
  
@@ -124,8 +125,8 @@ class Blockchain:
         myBlock['cumulative']['supply'][self.currencies[currency]]=PreviousBlock['cumulative']['supply'][self.currencies[currency]]
         myBlock['cumulative']['supply_offshore'][self.currencies[currency]]=PreviousBlock['cumulative']['supply_offshore'][self.currencies[currency]]
 
-    myBlock['cumulative']['supply'][self.currencies[65]]+=block['text']['result']['block_header']['reward']
-    myBlock['cumulative']['supply_offshore'][self.currencies[65]]+=block['text']['result']['block_header']['reward']
+    myBlock['cumulative']['supply'][self.currencies[65]]+=self.utils.convertFromMoneroFormat(block['text']['result']['block_header']['reward'])
+    myBlock['cumulative']['supply_offshore'][self.currencies[65]]+=self.utils.convertFromMoneroFormat(block['text']['result']['block_header']['reward'])
     return myBlock
 
   def ParseTransaction(self,tx):
