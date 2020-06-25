@@ -9,21 +9,12 @@ from libs.utils import tools
 class Blockchain:
   def __init__(self):
     self.url=os.environ['daemon_url']
-    self.currencies={65:"XHV", 66:"xAG", 67:"xAU", 68:"xAUD", 69:"xBTC", 70:"xCAD", 71:"xCHF", 72:"xCNY", 73:"xEUR", 74:"xGBP", 75:"xJPY", 76:"xNOK", 77:"xNZD", 78:"xUSD"}
-    self.currenciesConvert={'xhv':'xhv','xbtc':'btc','xusd':'usd','xag':"ag", 'xau':'xau', 'xaud':'aud', 'xcad':'cad','xchf':'chf', 'xcny':'cny', 'xeur':'eur', 'xgbp':'gbp', 'xjpy':'jpy', 'xnok':'nok', 'xnzd':'nzd'}
     self.mydb = mongodb.Mongodb()
     self.utils = tools()
-  def importCurrencies(self):
-    for currency in self.currencies:
-      mydict={}
-      mydict['xasset']=self.currencies[currency]
-      mydict['code']=self.currenciesConvert[self.currencies[currency].lower()]
-      mydict['_id']=currency
-      self.mydb.insert_one("currencies",mydict)
- 
-  def scanBlockchain(self):
-    self.importCurrencies()
-        
+    self.currencies=self.mydb.find("currencies")
+    self.xhv=self.mydb.find_one("currencies",{'code':'xhv'})
+    
+  def scanBlockchain(self):       
     #get Lastblock in blockchain
     response = self.getLastBlockHeader()
     if response['status_code']==200:
@@ -59,10 +50,9 @@ class Blockchain:
       myBlock['header']=block['text']['result']['block_header']
       myBlock['header']['timestamp']=datetime.utcfromtimestamp(myBlock['header']['timestamp'])
       myBlock['_id']=block['text']['result']['block_header']['height']
-
+      
       #Check against DB the blockhash
       DBHash=self.mydb.find_one("blocks",{"_id": myBlock['_id']})
-
       if DBHash is not None and DBHash['header']['hash']!=myBlock['header']['hash']:
         print ("Reorganize on block " + str(myBlock['_id']))
         #We need to delete all block above _id
@@ -70,27 +60,27 @@ class Blockchain:
         self.mydb.delete("blocks", {"_id": {"$gte": myBlock['_id']} })
         if myBlock['_id']+10<lastBlock:
           print ("Reorganize happening later. Maybe 51% attack")
-
       #Init for supply & offshore data
+      self.currencies.rewind()
       for currency in self.currencies:
-        myBlock['cumulative']['supply'][self.currencies[currency]]=0
-        myBlock['cumulative']['supply_offshore'][self.currencies[currency]]=0
-        myBlock['pricing_spot_record'][self.currencies[currency]]=0
-
+        myBlock['cumulative']['supply'][currency['xasset']]=0
+        myBlock['cumulative']['supply_offshore'][currency['xasset']]=0
+        myBlock['pricing_spot_record'][currency['xasset']]=0
       #Cumulative Supply
       myBlock=self.getCumulative(myBlock, PreviousBlock,block)
-  
-      if 'pricing_record' in myBlock['header']:
-        for pricingRecord in myBlock['header']['pricing_record']:
-          if isinstance(myBlock['header']['pricing_record'][pricingRecord],int) and myBlock['header']['pricing_record'][pricingRecord]>0 and pricingRecord.lower() in self.currenciesConvert:
-            #Check for rate in RateDB
-            query={'$and': [{'to': pricingRecord.lower()} , { 'valid_from': { '$lte': myBlock['header']['timestamp']} }]}
-            rate=self.mydb.find_last("rates",query)
-            if rate is not None:
-              myBlock['pricing_spot_record'][pricingRecord]=rate['rate']
-            else:
-              print ("no rate for " + pricingRecord)
-
+      #if 'pricing_record' in myBlock['header']:
+      #  for pricingRecord in myBlock['header']['pricing_record']:
+      
+      self.currencies.rewind()
+      for currency in self.currencies:
+        #Check for rate in RateDB
+        if currency['code']!='xhv':
+          query={'$and': [{'to': currency['code'] } , { 'valid_from': { '$lte': myBlock['header']['timestamp']} }]}
+          rate=self.mydb.find_last("rates",query)
+          if rate is not None:
+            myBlock['pricing_spot_record'][currency['xasset']]=rate['rate']
+          else:
+            print ("no rate for " + currency['code'])
       #Transactions in Block
       if 'tx_hashes' in block['text']['result']:
         myBlock['tx_hashes']=block['text']['result']['tx_hashes']
@@ -98,14 +88,14 @@ class Blockchain:
           myTx=self.ParseTransaction(tx)
           myTx['block_hash']=myBlock['header']['hash']
           if ('amount_minted' in myTx and myTx['amount_minted']>0) or ('amount_burnt' in myTx and myTx['amount_burnt']>0):
-            myBlock['cumulative']['supply_offshore'][self.currencies[myTx['offshore_data'][0]]]-=self.utils.convertFromMoneroFormat(myTx['amount_burnt'])
-            myBlock['cumulative']['supply_offshore'][self.currencies[myTx['offshore_data'][1]]]+=self.utils.convertFromMoneroFormat(myTx['amount_minted'])
+            CurFrom=self.mydb.find_one("currencies",{'_id': myTx['offshore_data'][0]})
+            CurTo=self.mydb.find_one("currencies",{'_id': myTx['offshore_data'][1]})
+            myBlock['cumulative']['supply_offshore'][CurFrom['xasset']]-=self.utils.convertFromMoneroFormat(myTx['amount_burnt'])
+            myBlock['cumulative']['supply_offshore'][CurTo['xasset']]+=self.utils.convertFromMoneroFormat(myTx['amount_minted'])
             #Write tx data
             self.mydb.insert_one("txs",myTx)
- 
       #Write Block data
       self.mydb.insert_one("blocks",myBlock)
-
 
       #Case for Timestamp on Block Genesis
       if myBlock['_id']==1:
@@ -120,13 +110,15 @@ class Blockchain:
     if blockHeight>0:
       if PreviousBlock is None:
         PreviousBlock=self.mydb.find_one("blocks",{'_id':blockHeight-1})
+      self.currencies.rewind()
       for currency in self.currencies:
         #loop to get all cumulative supply from previousBlock
-        myBlock['cumulative']['supply'][self.currencies[currency]]=PreviousBlock['cumulative']['supply'][self.currencies[currency]]
-        myBlock['cumulative']['supply_offshore'][self.currencies[currency]]=PreviousBlock['cumulative']['supply_offshore'][self.currencies[currency]]
+        myBlock['cumulative']['supply'][currency['xasset']]=PreviousBlock['cumulative']['supply'][currency['xasset']]
+        myBlock['cumulative']['supply_offshore'][currency['xasset']]=PreviousBlock['cumulative']['supply_offshore'][currency['xasset']]
+  
+    myBlock['cumulative']['supply'][self.xhv['xasset']]+=self.utils.convertFromMoneroFormat(block['text']['result']['block_header']['reward'])
+    myBlock['cumulative']['supply_offshore'][self.xhv['xasset']]+=self.utils.convertFromMoneroFormat(block['text']['result']['block_header']['reward'])
 
-    myBlock['cumulative']['supply'][self.currencies[65]]+=self.utils.convertFromMoneroFormat(block['text']['result']['block_header']['reward'])
-    myBlock['cumulative']['supply_offshore'][self.currencies[65]]+=self.utils.convertFromMoneroFormat(block['text']['result']['block_header']['reward'])
     return myBlock
 
   def ParseTransaction(self,tx):

@@ -58,8 +58,7 @@ class CirculationSupplyResource:
         ts_diff = (ts_to-ts_from)/nbDatapoints #time elasped between start & end.
         print ("start : " +str (ts_from))
         payload={'supply_coins':[],'ykeys':[],'organic_coins':[],'breakdown_coins':[],'supply_value':[],'organic_value':[],'breakdown_value':[]}
-        for currency in self.currencies:
-            payload['ykeys'].append("'" + currency['xasset'] + "'" )
+        
         
         for x in range(0,nbDatapoints+1):
             ts_target=ts_from + ((x)*ts_diff)
@@ -105,6 +104,14 @@ class CirculationSupplyResource:
                 payload['supply_value'].append(TmpBlockValue)
                 payload['organic_coins'].append(TmpBlockOrganic)
                 payload['organic_value'].append(TmpBlockOrganicValue)
+
+        #Loading yKeys only with Supply>0
+        self.currencies.rewind()
+        for currency in self.currencies:
+            if currency['xasset'] in TmpBlock and TmpBlock[currency['xasset']]>0:
+                payload['ykeys'].append(currency['xasset'])
+
+
         self.currencies.rewind()
         for currency in self.currencies:
             donutBlock={}

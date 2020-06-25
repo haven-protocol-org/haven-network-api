@@ -36,7 +36,7 @@ class Mongodb:
       print(e)
     return True
 
-  def find_last(self,collection,query=""):
+  def find_last(self,collection,query={}):
     try:
       response=self.find_one(collection,query,sort=[( '_id', pymongo.DESCENDING )])
     except Exception as e:
@@ -46,10 +46,8 @@ class Mongodb:
       print(e.message)
     return response
 
-  def find_one(self,collection,query="",sort=""):
+  def find_one(self,collection,query={},sort={}):
     try:
-      if query=="":
-        query={}
       response=self.mydb[collection].find_one(query,sort=sort)
     except Exception as e:
       response=e.message
@@ -58,10 +56,8 @@ class Mongodb:
       print(e.message)
     return response
   
-  def find(self,collection,query="",sort=""):
+  def find(self,collection,query={},sort={}):
     try:
-      if query=="":
-        query={}
       response=self.mydb[collection].find(query,sort=sort)
     except Exception as e:
       response=e.message
@@ -74,7 +70,6 @@ class Mongodb:
     try:
       response=self.mydb[collection].update_one(myquery, newvalues)
     except Exception as e:
-      response=e.message
       print(type(e)) 
       print(e.args)
       print(e.message)
