@@ -1,4 +1,7 @@
 import falcon
+from falcon_caching import Cache
+cache = Cache(config={'CACHE_TYPE': 'simple'})
+
 import json 
 from bson import json_util
 import libs.utils
@@ -22,6 +25,8 @@ class InfoResource:
         self.mongo=mongodb.Mongodb()
         self.tools=libs.utils.tools()
         self.cg=coingecko.Coingecko()
+    
+    @cache.cached(timeout=10)
     def on_get(self, req, resp):
         dt_to = datetime.now()
         if 'timestamp' in req.params:

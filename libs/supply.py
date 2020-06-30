@@ -25,7 +25,7 @@ class CirculationSupplyResource:
         self.tools=libs.utils.tools()
         self.currencies=self.mydb.find("currencies")
     
-    #@cache.cached(timeout=10)
+    @cache.cached(timeout=60)
     def on_get(self, req, resp):
         #If an end timestamp is specified, use this one, or timestamp=now()
         nbDatapoints=50
