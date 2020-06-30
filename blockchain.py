@@ -8,7 +8,7 @@ from datetime import datetime
 from libs.utils import tools
 class Blockchain:
   def __init__(self):
-    self.url=os.environ['daemon_url']
+    self.url=os.environ['hv_daemon_url']
     self.mydb = mongodb.Mongodb()
     self.utils = tools()
     self.currencies=self.mydb.find("currencies")

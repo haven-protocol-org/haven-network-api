@@ -8,9 +8,15 @@ import coingecko
 
 
 def batch():
+  #Check variables
+  MANDATORY_ENV_VARS = ["hv_mongo_url", "hv_mongo_db","hv_daemon_url"]
+  for var in MANDATORY_ENV_VARS:
+    if var not in os.environ:
+        raise EnvironmentError("Failed because {} is not set.".format(var))
+
   bc=blockchain.Blockchain()
   cg=coingecko.Coingecko()
-  if 'batch_debug' in os.environ:
+  if 'hv_debug' in os.environ:
     cg.importCurrencies()
     cg.importExchangePrice(365*3)
     cg.importExchangePrice(90)
@@ -18,8 +24,8 @@ def batch():
     bc.scanBlockchain()
   else:
     try:
-      with pid.PidFile('havenImport') as p:
-        print ("Starting process " + str(p))
+      with pid.PidFile('havenBatch' + os.environ['hv_dbname']) as p:
+        print ("Starting process " + str(p) + " on " + os.environ['hv_dbname'])
         cg.importCurrencies()
         cg.importExchangePrice(365*3)
         cg.importExchangePrice(90)

@@ -4,8 +4,8 @@ import os
 
 class Mongodb:
   def __init__(self):
-      self.myclient = pymongo.MongoClient(os.environ['mongo'])
-      self.mydb = self.myclient[os.environ['dbname']]
+      self.myclient = pymongo.MongoClient(os.environ['hv_mongo_url'])
+      self.mydb = self.myclient[os.environ['hv_mongo_db']]
 
   def delete_one(self,collection,query):
     try:
