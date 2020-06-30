@@ -28,16 +28,31 @@ class Blockchain:
       restart=restart['_id']
     else:
       restart=0
-    print ("DB height is " + str(restart))
+
+    #Search for a reorganize
+    scanHop=1
+    finished = False
+    while not finished:
+      BlockRestart=restart-scanHop
+      if BlockRestart<0:
+         BlockRestart=0
+      blockDB=self.mydb.find_last("blocks",{"_id":BlockRestart})
+      BlockBC=self.getBlockHeaderByHeight({"height":BlockRestart})
+      if blockDB['header']['hash']==BlockBC['text']['result']['block_header']['hash']:
+        print ("Block " + str(BlockRestart) + " hash matches DB")
+        finished=True
+      else:
+        print ("Reorganize on block " + str(BlockRestart) + " continue revert to find matching hash.")
+        #Delete all the BC >= BlockRestart
+        print ("Deleting DB from block " + str(BlockRestart-scanHop+1))
+        self.mydb.delete("txs",{ "block_height": {"$gte": BlockRestart-scanHop+1} })
+        self.mydb.delete("blocks", {"_id": {"$gte": BlockRestart-scanHop+1} })
+      scanHop=scanHop*2
+
+    print ("DB height is " + str(BlockRestart+1))
 
     PreviousBlock=None
-    #Always rescan blockchain - blocks to check if a reorg is happening
-    if restart<=50:
-      restart=0
-    else:
-      restart-=50
-
-    for blockHeight in range(restart,lastBlock+1):
+    for blockHeight in range(BlockRestart+1,lastBlock+1):
     #for blockHeight in range(0,100):
       print ("Import block " + str(blockHeight) + "/" + str(lastBlock))
       params={"height":blockHeight}
@@ -52,15 +67,6 @@ class Blockchain:
       myBlock['header']['timestamp']=datetime.utcfromtimestamp(myBlock['header']['timestamp'])
       myBlock['_id']=block['text']['result']['block_header']['height']
       
-      #Check against DB the blockhash
-      DBHash=self.mydb.find_one("blocks",{"_id": myBlock['_id']})
-      if DBHash is not None and DBHash['header']['hash']!=myBlock['header']['hash']:
-        print ("Reorganize on block " + str(myBlock['_id']))
-        #We need to delete all block above _id
-        self.mydb.delete("txs",{ "block_height": {"$gte": myBlock['_id']} })
-        self.mydb.delete("blocks", {"_id": {"$gte": myBlock['_id']} })
-        if myBlock['_id']+10<lastBlock:
-          print ("Reorganize happening later. Maybe 51% attack")
       #Init for supply & offshore data
       self.currencies.rewind()
       for currency in self.currencies:
