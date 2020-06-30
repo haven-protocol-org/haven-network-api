@@ -34,19 +34,8 @@ class spec:
     resp.content_type = falcon.MEDIA_JSON
 
 
-
-
 infoResource=info.InfoResource()
 api.add_route('/info', infoResource)
-
-spotPricingResource=pricing.SpotPricingResource()
-api.add_route('/spotPricing', spotPricingResource)
-
-mAPricingResource=pricing.MAPricingResource()
-api.add_route('/MApricing', mAPricingResource)
-
-deviationHistoryResource=deviation.DeviationHistoryResource()
-api.add_route('/deviationHistory', deviationHistoryResource)
 
 circulationSupplyResource=supply.CirculationSupplyResource()
 api.add_route('/circulationSupply', circulationSupplyResource)
@@ -66,7 +55,4 @@ spec = APISpec(
 #spec.components.schema('Supply', schema=supply.SupplySchema)
 
 spec.path(resource=infoResource)
-spec.path(resource=spotPricingResource)
-spec.path(resource=mAPricingResource)
-spec.path(resource=deviationHistoryResource)
 spec.path(resource=circulationSupplyResource)

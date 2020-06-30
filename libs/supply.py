@@ -105,7 +105,7 @@ class CirculationSupplyResource:
                     totalValue+=TmpBlockValue[currency['xasset']]
 
                     #Deviation
-                    if currency['xasset']!='XHV' and block['header']['pricing_record'][currency['xasset']]!=0:
+                    if currency['xasset']!='XHV' and 'pricing_record' in block['header']  and currency['xasset'] in block['header']['pricing_record'] and block['header']['pricing_record'][currency['xasset']]!=0:
                         TmpBlockDeviationRatio[currency['xasset']]=round(block['header']['pricing_record'][currency['xasset']]/block['pricing_spot_record'][currency['xasset']]*100,4)
                         TmpBlockDeviation[currency['xasset'] + "-spot"]=round(self.tools.convertFromMoneroFormat(block['pricing_spot_record'][currency['xasset']]),4)
                         TmpBlockDeviation[currency['xasset'] + '-ma']=round(self.tools.convertFromMoneroFormat(block['header']['pricing_record'][currency['xasset']]),4)
