@@ -46,6 +46,16 @@ class Mongodb:
       print(e.message)
     return response
 
+  def find_first(self,collection,query={}):
+    try:
+      response=self.find_one(collection,query,sort=[( '_id', pymongo.ASCENDING )])
+    except Exception as e:
+      response=e.message
+      print(type(e)) 
+      print(e.args)
+      print(e.message)
+    return response
+
   def find_one(self,collection,query={},sort={}):
     try:
       response=self.mydb[collection].find_one(query,sort=sort)

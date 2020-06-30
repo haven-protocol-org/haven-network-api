@@ -36,6 +36,7 @@ class Blockchain:
       restart=0
     else:
       restart-=50
+
     for blockHeight in range(restart,lastBlock+1):
     #for blockHeight in range(0,100):
       print ("Import block " + str(blockHeight) + "/" + str(lastBlock))
@@ -71,16 +72,13 @@ class Blockchain:
       #if 'pricing_record' in myBlock['header']:
       #  for pricingRecord in myBlock['header']['pricing_record']:
       
-      self.currencies.rewind()
-      for currency in self.currencies:
-        #Check for rate in RateDB
-        if currency['code']!='xhv':
-          query={'$and': [{'to': currency['code'] } , { 'valid_from': { '$lte': myBlock['header']['timestamp']} }]}
-          rate=self.mydb.find_last("rates",query)
-          if rate is not None:
-            myBlock['pricing_spot_record'][currency['xasset']]=rate['rate']
-          else:
-            print ("no rate for " + currency['code'])
+
+      query={ 'valid_from': { '$lte': myBlock['header']['timestamp']}}
+      rate=self.mydb.find_last("rates",query)
+      if rate is None:
+        rate=self.mydb.find_first("rates")
+      
+      myBlock['pricing_spot_record']=rate['price_record']
       #Transactions in Block
       if 'tx_hashes' in block['text']['result']:
         myBlock['tx_hashes']=block['text']['result']['tx_hashes']

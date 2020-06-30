@@ -13,6 +13,10 @@ class Coingecko:
     self.currencies=self.mydb.find('currencies')
     self.tools = tools()
 
+  def getInfo(self,coin):
+    url=self.url+"coins/"+coin
+    response=requests.request("get",url)
+    return response
   def getlastrate(self,coin, currency):
     url=self.url+"simple/price?ids="+coin+ "&vs_currencies=" + currency
     response = requests.request("get", url)
@@ -31,26 +35,37 @@ class Coingecko:
   def importExchangePrice(self,duration=30):
     self.currencies.rewind()
     for coin in self.currencies:
+        if coin['code']=='xhv':
+          continue
         print ("Import Currency : " + coin['code'] + " for the last " + str(duration) + " days.")
         url=self.url+ "coins/haven/market_chart?vs_currency=" + coin['code'] + "&days="+str(duration)
+        print (url)
         response = requests.request("get", url)
         rates=json.loads(response.text)
-        if 'prices' in rates:
-          query = {'$and': [{'to':coin['xasset']}, {'valid_until':{'$lt': next(iter(rates['prices']))[0] }}] }
-          lastRate=self.mydb.find_last("rates",query)
-          valid_from=0
-          if lastRate is not None:
-            valid_from=lastRate['valid_until']
+        if 'prices' in rates:          
           for rate in rates['prices']:
-            myRate={}
-            myRate['valid_from']=datetime.utcfromtimestamp(valid_from)
-            myRate['valid_until']=datetime.utcfromtimestamp(int(str(rate[0])[:10]))
-            myRate['from']='xhv'
-            myRate['to']=coin['code']
-            myRate['rate']=self.tools.convertToMoneroFormat(rate[1])
-            myRate['_id']=str(rate[0])+"-"+coin['code']
-            valid_from=int(str(rate[0])[:10])
-            self.mydb.insert_one("rates",myRate)
+            dt=datetime.utcfromtimestamp(int(str(rate[0])[:10]))
+            #print (dt)
+            dt=dt.replace(minute=0, second=0)
+            #print (dt)
+            ts=datetime.timestamp(dt)
+            #We check on DB if a rates exists with this timestamp
+            query={'_id': ts}
+            foundRate=self.mydb.find_last("rates",query)
+            if foundRate is not None:
+              print ('rate found')
+              #We update existing rates
+              newvalues = { "$set": {'price_record.'  + coin['xasset']: self.tools.convertToMoneroFormat(rate[1]),'valid_from':datetime.utcfromtimestamp(int(str(rate[0])[:10])) },'$inc':{'currencies_count':+1}}
+              self.mydb.update_one("rates",query, newvalues)
+            else:
+              #we create the rate with the currency
+              myRate={'price_record':{}}
+              print ('no rate found')
+              myRate['valid_from']=datetime.utcfromtimestamp(int(str(rate[0])[:10]))
+              myRate['price_record'][coin['xasset']]=self.tools.convertToMoneroFormat(rate[1])
+              myRate['_id']=ts
+              myRate['currencies_count']=1
+              self.mydb.insert_one("rates",myRate)
         else:
-          print ("No rates for " + coin['code'])
+          print ("No rates for " + coin['xasset'])
     return response
