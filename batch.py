@@ -10,6 +10,7 @@ import coingecko
 
 
 def batch():
+  resetRates=os.getenv('hv_resetrates',False)
   #Check variables
   MANDATORY_ENV_VARS = ["hv_mongo_url", "hv_mongo_db","hv_daemon_url"]
   for var in MANDATORY_ENV_VARS:
@@ -20,8 +21,9 @@ def batch():
   cg=coingecko.Coingecko()
   if 'hv_debug' in os.environ:
     cg.importCurrencies()
-    cg.importExchangePrice(365*3)
-    cg.importExchangePrice(90)
+    if resetRates:
+      cg.importExchangePrice(365*3)
+      cg.importExchangePrice(90)
     cg.importExchangePrice(2)
     bc.scanBlockchain()
   else:
@@ -29,8 +31,9 @@ def batch():
       with pid.PidFile('havenBatch' + os.environ['hv_mongo_db']) as p:
         print ("Starting process on " + os.environ['hv_mongo_db'])
         cg.importCurrencies()
-        cg.importExchangePrice(365*3)
-        cg.importExchangePrice(90)
+        if resetRates:
+          cg.importExchangePrice(365*3)
+          cg.importExchangePrice(90)
         cg.importExchangePrice(2)
         bc.scanBlockchain()
     except pid.PidFileError:
