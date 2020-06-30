@@ -26,8 +26,8 @@ def batch():
     bc.scanBlockchain()
   else:
     try:
-      with pid.PidFile('havenBatch' + os.environ['hv_dbname']) as p:
-        print ("Starting process " + str(p) + " on " + os.environ['hv_dbname'])
+      with pid.PidFile('havenBatch' + os.environ['hv_mongo_db']) as p:
+        print ("Starting process on " + os.environ['hv_mongo_db'])
         cg.importCurrencies()
         cg.importExchangePrice(365*3)
         cg.importExchangePrice(90)
