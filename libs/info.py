@@ -68,12 +68,12 @@ class InfoResource:
         payload['bc']=self.bc.getInfo()['text']
         for currency in LastBlock['pricing_spot_record']:
             #Pricing spot record
-            payload['db_lastblock']['pricing_spot_record'][currency]=self.tools.convertFromMoneroFormat(LastBlock['pricing_spot_record'][currency],currency)
-            payload['db_lastblock24']['pricing_spot_record'][currency]=self.tools.convertFromMoneroFormat(LastBlock24['pricing_spot_record'][currency],currency)
+            payload['db_lastblock']['pricing_spot_record'][currency]=self.tools.convertFromMoneroFormat(LastBlock['pricing_spot_record'][currency])
+            payload['db_lastblock24']['pricing_spot_record'][currency]=self.tools.convertFromMoneroFormat(LastBlock24['pricing_spot_record'][currency])
             #pricing record
             if 'pricing_record' in LastBlock24['header'] and currency in LastBlock24['header']['pricing_record']:
-                payload['db_lastblock']['pricing_record'][currency]=self.tools.convertFromMoneroFormat(LastBlock['header']['pricing_record'][currency],currency)
-                payload['db_lastblock24']['pricing_record'][currency]=self.tools.convertFromMoneroFormat(LastBlock24['header']['pricing_record'][currency],currency)
+                payload['db_lastblock']['pricing_record'][currency]=self.tools.convertFromMoneroFormat(LastBlock['header']['pricing_record'][currency])
+                payload['db_lastblock24']['pricing_record'][currency]=self.tools.convertFromMoneroFormat(LastBlock24['header']['pricing_record'][currency])
                 #deviation
                 payload['db_lastblock']['spot_ma_deviation'][currency]=payload['db_lastblock']['pricing_record'][currency]/payload['db_lastblock']['pricing_spot_record'][currency]
                 payload['db_lastblock24']['spot_ma_deviation'][currency]=payload['db_lastblock24']['pricing_record'][currency]/payload['db_lastblock24']['pricing_spot_record'][currency]
