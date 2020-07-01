@@ -1,10 +1,12 @@
 import math
 
 class tools:
-    def convertFromMoneroFormat(self,price):
+    def convertFromMoneroFormat(self,price,currency="none"):
         lenghtPrice=len(str(price))
-        if lenghtPrice<12:
-            price=price*(10*(13-lenghtPrice))
+        Diff=0
+        if lenghtPrice<12 and currency!='xBTC':
+            Diff=12-lenghtPrice
+            price=price*math.pow(10,Diff)
         price=price/math.pow(10,12)
         return price
 
