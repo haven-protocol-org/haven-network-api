@@ -35,8 +35,9 @@ class InfoResource:
           except TypeError as e:
               #Timestamp not valid, revert to now()
               print (e)
+        query={'header.timestamp':{'$lte':dt_to}}
+        LastBlock=self.mongo.find_last('blocks',query)
         dt_24= dt_to - relativedelta(days=1)
-        LastBlock=self.mongo.find_last('blocks')
         query={'header.timestamp':{'$lte':dt_24}}
         LastBlock24=self.mongo.find_last('blocks',query)
         
