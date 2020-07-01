@@ -94,8 +94,8 @@ class Blockchain:
           if ('amount_minted' in myTx and myTx['amount_minted']>0) or ('amount_burnt' in myTx and myTx['amount_burnt']>0):
             CurFrom=self.mydb.find_one("currencies",{'_id': myTx['offshore_data'][0]})
             CurTo=self.mydb.find_one("currencies",{'_id': myTx['offshore_data'][1]})
-            myBlock['cumulative']['supply_offshore'][CurFrom['xasset']]-=self.utils.convertFromMoneroFormat(myTx['amount_burnt'],CurFrom['xasset'])
-            myBlock['cumulative']['supply_offshore'][CurTo['xasset']]+=self.utils.convertFromMoneroFormat(myTx['amount_minted'],CurTo['xasset'])
+            myBlock['cumulative']['supply_offshore'][CurFrom['xasset']]-=self.utils.convertFromMoneroFormat(myTx['amount_burnt'])
+            myBlock['cumulative']['supply_offshore'][CurTo['xasset']]+=self.utils.convertFromMoneroFormat(myTx['amount_minted'])
             #Write tx data
             self.mydb.insert_one("txs",myTx)
       #Write Block data
