@@ -71,7 +71,7 @@ class InfoResource:
             payload['db_lastblock']['pricing_spot_record'][currency]=self.tools.convertFromMoneroFormat(LastBlock['pricing_spot_record'][currency])
             payload['db_lastblock24']['pricing_spot_record'][currency]=self.tools.convertFromMoneroFormat(LastBlock24['pricing_spot_record'][currency])
             #pricing record
-            if currency in payload['db_lastblock']['pricing_record']:
+            if currency in LastBlock24['header']['pricing_record']:
                 payload['db_lastblock']['pricing_record'][currency]=self.tools.convertFromMoneroFormat(LastBlock['header']['pricing_record'][currency])
                 payload['db_lastblock24']['pricing_record'][currency]=self.tools.convertFromMoneroFormat(LastBlock24['header']['pricing_record'][currency])
                 #deviation
