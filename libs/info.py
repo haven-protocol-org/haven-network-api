@@ -69,7 +69,10 @@ class InfoResource:
         for currency in LastBlock['pricing_spot_record']:
             #Pricing spot record
             payload['db_lastblock']['pricing_spot_record'][currency]=self.tools.convertFromMoneroFormat(LastBlock['pricing_spot_record'][currency])
-            payload['db_lastblock24']['pricing_spot_record'][currency]=self.tools.convertFromMoneroFormat(LastBlock24['pricing_spot_record'][currency])
+            if currency in LastBlock24['pricing_spot_record']:
+                payload['db_lastblock24']['pricing_spot_record'][currency]=self.tools.convertFromMoneroFormat(LastBlock24['pricing_spot_record'][currency])
+            else:
+                payload['db_lastblock24']['pricing_spot_record'][currency]=0
             #pricing record
             if 'pricing_record' in LastBlock24['header'] and currency in LastBlock24['header']['pricing_record']:
                 payload['db_lastblock']['pricing_record'][currency]=self.tools.convertFromMoneroFormat(LastBlock['header']['pricing_record'][currency])
