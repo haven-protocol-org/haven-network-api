@@ -38,7 +38,7 @@ class Blockchain:
          BlockRestart=0
       blockDB=self.mydb.find_last("blocks",{"_id":BlockRestart})
       BlockBC=self.getBlockHeaderByHeight({"height":BlockRestart})
-      if blockDB['header']['hash']==BlockBC['text']['result']['block_header']['hash']:
+      if blockDB is None or blockDB['header']['hash']==BlockBC['text']['result']['block_header']['hash']:
         print ("Block " + str(BlockRestart) + " hash matches DB")
         finished=True
       else:
@@ -74,7 +74,8 @@ class Blockchain:
         myBlock['cumulative']['supply_offshore'][currency['xasset']]=0
         myBlock['pricing_spot_record'][currency['xasset']]=0
       #Cumulative Supply
-      myBlock=self.getCumulative(myBlock, PreviousBlock,block)
+      if PreviousBlock is not None:
+        myBlock=self.getCumulative(myBlock, PreviousBlock,block)
       #if 'pricing_record' in myBlock['header']:
       #  for pricingRecord in myBlock['header']['pricing_record']:
       
