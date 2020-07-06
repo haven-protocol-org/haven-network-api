@@ -73,12 +73,13 @@ class InfoResource:
         for currency in self.currencies:
             if currency['xasset']!='XHV':
             #Pricing spot record
+                if LastBlock is not None and 'pricing_spot_record' in LastBlock and currency['xasset'] in LastBlock['pricing_spot_record']:
                 payload['db_lastblock']['pricing_spot_record'][currency['xasset']]=self.tools.convertFromMoneroFormat(LastBlock['pricing_spot_record'][currency['xasset']])
                 payload['db_lastblock']['pricing_record'][currency['xasset']]=self.tools.convertFromMoneroFormat(LastBlock['header']['pricing_record'][currency['xasset']])
                 payload['db_lastblock']['spot_ma_deviation'][currency['xasset']]=payload['db_lastblock']['pricing_record'][currency['xasset']]/payload['db_lastblock']['pricing_spot_record'][currency['xasset']]
                 payload['db_lastblock']['supply']=LastBlock['cumulative']['supply_offshore']
 
-                if LastBlock24 is not None:
+                if LastBlock24 is not None and 'pricing_spot_record' in LastBlock24 and currency['xasset'] in LastBlock24['pricing_spot_record']:
                     payload['db_lastblock24']['pricing_spot_record'][currency['xasset']]=self.tools.convertFromMoneroFormat(LastBlock24['pricing_spot_record'][currency['xasset']])
                     payload['db_lastblock24']['pricing_record'][currency['xasset']]=self.tools.convertFromMoneroFormat(LastBlock24['header']['pricing_record'][currency['xasset']])
                     payload['db_lastblock24']['spot_ma_deviation'][currency['xasset']]=payload['db_lastblock24']['pricing_record'][currency['xasset']]/payload['db_lastblock24']['pricing_spot_record'][currency['xasset']]
