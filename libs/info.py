@@ -67,6 +67,9 @@ class InfoResource:
 
         payload['bc']=self.bc.getInfo()['text']
         self.currencies.rewind()
+        payload['db_lastblock']['height']=LastBlock['_id']
+        if LastBlock24 is not None:
+            payload['db_lastblock24']['height']=LastBlock24['_id']
         for currency in self.currencies:
             if currency['xasset']!='XHV':
             #Pricing spot record
