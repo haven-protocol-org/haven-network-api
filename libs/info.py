@@ -63,7 +63,7 @@ class InfoResource:
         }
         coingecko=json.loads(self.cg.getInfo("haven").text)
         del coingecko['description']
-        #payload['coingecko']=coingecko
+        payload['coingecko']=coingecko
 
         payload['bc']=self.bc.getInfo()['text']
         for currency in self.currencies:
