@@ -66,6 +66,7 @@ class InfoResource:
         payload['coingecko']=coingecko
 
         payload['bc']=self.bc.getInfo()['text']
+        self.currencies.rewind()
         for currency in self.currencies:
             if currency['xasset']!='XHV':
             #Pricing spot record
@@ -79,12 +80,7 @@ class InfoResource:
                     payload['db_lastblock24']['pricing_record'][currency['xasset']]=self.tools.convertFromMoneroFormat(LastBlock24['header']['pricing_record'][currency['xasset']])
                     payload['db_lastblock24']['spot_ma_deviation'][currency['xasset']]=payload['db_lastblock24']['pricing_record'][currency['xasset']]/payload['db_lastblock24']['pricing_spot_record'][currency['xasset']]
                     payload['db_lastblock24']['supply']=LastBlock24['cumulative']['supply_offshore']
-        
-        
-        
 
-        
-        
         #payload['db_lastblock']=LastBlock
         #payload['db_lastblock24']=LastBlock24
         
