@@ -34,6 +34,7 @@ class Coingecko:
 
   def importExchangePrice(self,duration=30):
     self.currencies.rewind()
+    print (self.currencies.count())
     for coin in self.currencies:
         if coin['code']=='xhv':
           continue
@@ -55,13 +56,16 @@ class Coingecko:
             if foundRate is not None:
               print ('rate found')
               #We update existing rates
-              newvalues = { "$set": {'price_record.'  + coin['xasset']: self.tools.convertToMoneroFormat(rate[1]),'valid_from':datetime.utcfromtimestamp(int(str(rate[0])[:10])) },'$inc':{'currencies_count':+1}}
+              if foundRate['currencies_count']=>(self.currencies.count()-1):
+                newvalues = { "$set": {'price_record.'  + coin['xasset']: self.tools.convertToMoneroFormat(rate[1])}}
+              else:
+                newvalues = { "$set": {'price_record.'  + coin['xasset']: self.tools.convertToMoneroFormat(rate[1])},'$inc':{'currencies_count':+1}}
               self.mydb.update_one("rates",query, newvalues)
             else:
               #we create the rate with the currency
               myRate={'price_record':{}}
               print ('no rate found')
-              myRate['valid_from']=datetime.utcfromtimestamp(int(str(rate[0])[:10]))
+              myRate['valid_from']=dt #datetime.utcfromtimestamp(int(str(rate[0])[:10]))
               myRate['price_record'][coin['xasset']]=self.tools.convertToMoneroFormat(rate[1])
               myRate['_id']=ts
               myRate['currencies_count']=1
