@@ -10,7 +10,6 @@ import coingecko
 
 
 def batch():
-  resetRates=os.getenv('hv_resetrates',False)
   #Check variables
   MANDATORY_ENV_VARS = ["hv_mongo_url", "hv_mongo_db","hv_daemon_url"]
   for var in MANDATORY_ENV_VARS:
@@ -21,7 +20,7 @@ def batch():
   cg=coingecko.Coingecko()
   if 'hv_debug' in os.environ:
     cg.importCurrencies()
-    if resetRates:
+    if 'hv_resetrates' in os.environ:
       cg.importExchangePrice(365*3)
       cg.importExchangePrice(90)
     cg.importExchangePrice(2)
