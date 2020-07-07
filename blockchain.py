@@ -111,7 +111,6 @@ class Blockchain:
 
   def getCumulative(self,myBlock,PreviousBlock,block):
     blockHeight=myBlock['_id']
-    print (blockHeight)
     if blockHeight>1:
       if PreviousBlock is None:
         PreviousBlock=self.mydb.find_one("blocks",{'_id':blockHeight-1})
