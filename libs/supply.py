@@ -54,6 +54,9 @@ class CirculationSupplyResource:
           except Exception:
               resp.status=falcon.HTTP_401
               return 
+        firstBlock=self.mydb.find_first("blocks")
+        if firstBlock is not None and firstBlock['header']['timestamp']>dt_from:
+            dt_from=firstBlock['header']['timestamp']
         ts_to=calendar.timegm(dt_to.timetuple())
         ts_from=calendar.timegm(dt_from.timetuple())
         #We need ~100 pts of data, so each points will be seperated by ts_diff/100
