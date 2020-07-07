@@ -30,7 +30,7 @@ def batch():
       with pid.PidFile('havenBatch' + os.environ['hv_mongo_db']) as p:
         print ("Starting process on " + os.environ['hv_mongo_db'])
         cg.importCurrencies()
-        if resetRates:
+        if 'hv_resetrates' in os.environ:
           cg.importExchangePrice(365*3)
           cg.importExchangePrice(90)
         cg.importExchangePrice(2)
