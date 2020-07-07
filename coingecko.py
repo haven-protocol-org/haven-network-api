@@ -56,7 +56,7 @@ class Coingecko:
             if foundRate is not None:
               print ('rate found')
               #We update existing rates
-              if foundRate['currencies_count']=>(self.currencies.count()-1):
+              if foundRate['currencies_count']>=(self.currencies.count()-1):
                 newvalues = { "$set": {'price_record.'  + coin['xasset']: self.tools.convertToMoneroFormat(rate[1])}}
               else:
                 newvalues = { "$set": {'price_record.'  + coin['xasset']: self.tools.convertToMoneroFormat(rate[1])},'$inc':{'currencies_count':+1}}
