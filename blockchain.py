@@ -74,8 +74,7 @@ class Blockchain:
         myBlock['cumulative']['supply_offshore'][currency['xasset']]=0
         myBlock['pricing_spot_record'][currency['xasset']]=0
       #Cumulative Supply
-      if PreviousBlock is not None:
-        myBlock=self.getCumulative(myBlock, PreviousBlock,block)
+      myBlock=self.getCumulative(myBlock, PreviousBlock,block)
       #if 'pricing_record' in myBlock['header']:
       #  for pricingRecord in myBlock['header']['pricing_record']:
       
@@ -112,7 +111,8 @@ class Blockchain:
 
   def getCumulative(self,myBlock,PreviousBlock,block):
     blockHeight=myBlock['_id']
-    if blockHeight>0:
+    print (blockHeight)
+    if blockHeight>1:
       if PreviousBlock is None:
         PreviousBlock=self.mydb.find_one("blocks",{'_id':blockHeight-1})
       self.currencies.rewind()
