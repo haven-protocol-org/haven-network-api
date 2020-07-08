@@ -82,6 +82,9 @@ class Blockchain:
       query={'$and':[{'valid_from': { '$lte': myBlock['header']['timestamp']}},{'currencies_count':13}]}
       
       rate=self.mydb.find_last("rates",query)
+      if rate is None:
+        rate=self.mydb.find_first("rates")
+      
       myBlock['pricing_spot_record']=rate['price_record']
 
       #Transactions in Block
