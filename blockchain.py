@@ -80,9 +80,10 @@ class Blockchain:
       #  for pricingRecord in myBlock['header']['pricing_record']:
 
       query={'valid_from': { '$lte': myBlock['header']['timestamp']}}
-      sort=[( 'valid_from', pymongo.DESCENDING )]
+      sort=[( '_id', pymongo.DESCENDING )]
       rates=self.mydb.find("rates",query, sort)
       for rate in rates:
+          print (rate)
           print (len(rate['price_record']))
           print (self.currencies.count())
           if len(rate['price_record'])==self.currencies.count()-1:
