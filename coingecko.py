@@ -54,9 +54,11 @@ class Coingecko:
             query={'_id': ts}
             foundRate=self.mydb.find_last("rates",query)
             if foundRate is not None:
-              print ('rate found')
               #We update existing rates
-              newvalues = { "$set": {'price_record.'  + coin['xasset']: self.tools.convertToMoneroFormat(rate[1])}}
+              if coin['xasset'] in foundRate['price_record']:
+                newvalues = { "$set": {'price_record.'  + coin['xasset']: self.tools.convertToMoneroFormat(rate[1])}}
+              else:
+                newvalues = { "$set": {'price_record.'  + coin['xasset']: self.tools.convertToMoneroFormat(rate[1])},'$inc':{'currencies_count':+1}}
               self.mydb.update_one("rates",query, newvalues)
             else:
               #we create the rate with the currency
@@ -65,6 +67,7 @@ class Coingecko:
               myRate['valid_from']=dt #datetime.utcfromtimestamp(int(str(rate[0])[:10]))
               myRate['price_record'][coin['xasset']]=self.tools.convertToMoneroFormat(rate[1])
               myRate['_id']=ts
+              myRate['currencies_count']=1
               self.mydb.insert_one("rates",myRate)
         else:
           print ("No rates for " + coin['xasset'])

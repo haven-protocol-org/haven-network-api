@@ -79,18 +79,11 @@ class Blockchain:
       #if 'pricing_record' in myBlock['header']:
       #  for pricingRecord in myBlock['header']['pricing_record']:
 
-      query={'valid_from': { '$lte': myBlock['header']['timestamp']}}
-      sort=[( '_id', pymongo.DESCENDING )]
-      rates=self.mydb.find("rates",query, sort)
-      for rate in rates:
-          print (rate)
-          print (len(rate['price_record']))
-          print (self.currencies.count())
-          if len(rate['price_record'])==self.currencies.count()-1:
-            rate=self.mydb.find_first("rates")
-            break
-          
+      query={'$and':[{'valid_from': { '$lte': myBlock['header']['timestamp']}},{'currencies_count':13}]}
+      
+      rate=self.mydb.find_last("rates",query)
       myBlock['pricing_spot_record']=rate['price_record']
+
       #Transactions in Block
       if 'tx_hashes' in block['text']['result']:
         myBlock['tx_hashes']=block['text']['result']['tx_hashes']
