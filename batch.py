@@ -23,7 +23,7 @@ def batch():
     if 'hv_resetrates' in os.environ:
       cg.importExchangePrice(365*3)
       cg.importExchangePrice(90)
-    cg.importExchangePrice(2)
+    cg.importExchangePrice(1)
     bc.scanBlockchain()
   else:
     try:
@@ -33,7 +33,7 @@ def batch():
         if 'hv_resetrates' in os.environ:
           cg.importExchangePrice(365*3)
           cg.importExchangePrice(90)
-        cg.importExchangePrice(2)
+        cg.importExchangePrice(1)
         bc.scanBlockchain()
     except pid.PidFileError:
       print ("Process already running")

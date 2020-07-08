@@ -4,6 +4,7 @@ import math
 import re
 import os
 import mongodb
+import pymongo
 from datetime import datetime
 from libs.utils import tools
 class Blockchain:
@@ -77,13 +78,17 @@ class Blockchain:
       myBlock=self.getCumulative(myBlock, PreviousBlock,block)
       #if 'pricing_record' in myBlock['header']:
       #  for pricingRecord in myBlock['header']['pricing_record']:
-      
 
-      query={'$and':[{'valid_from': { '$lte': myBlock['header']['timestamp']}},{'currencies_count':{'$gte':13}}]}
-      rate=self.mydb.find_last("rates",query)
-      if rate is None:
-        rate=self.mydb.find_first("rates")
-      
+      query={'valid_from': { '$lte': myBlock['header']['timestamp']}}
+      sort=[( 'valid_from', pymongo.DESCENDING )]
+      rates=self.mydb.find("rates",query, sort)
+      for rate in rates:
+          print (len(rate['price_record']))
+          print (self.currencies.count())
+          if len(rate['price_record'])==self.currencies.count()-1:
+            rate=self.mydb.find_first("rates")
+            break
+          
       myBlock['pricing_spot_record']=rate['price_record']
       #Transactions in Block
       if 'tx_hashes' in block['text']['result']:

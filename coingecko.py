@@ -32,7 +32,7 @@ class Coingecko:
       mydict['_id']=currency
       self.mydb.insert_one("currencies",mydict)
 
-  def importExchangePrice(self,duration=30):
+  def importExchangePrice(self,duration=30,granularity='days'):
     self.currencies.rewind()
     print (self.currencies.count())
     for coin in self.currencies:
@@ -47,7 +47,7 @@ class Coingecko:
           for rate in rates['prices']:
             dt=datetime.utcfromtimestamp(int(str(rate[0])[:10]))
             #print (dt)
-            dt=dt.replace(minute=0, second=0)
+            dt=dt.replace(minute=math.floor(dt.minute/10)*10 ,second=0)
             #print (dt)
             ts=datetime.timestamp(dt)
             #We check on DB if a rates exists with this timestamp
@@ -56,10 +56,7 @@ class Coingecko:
             if foundRate is not None:
               print ('rate found')
               #We update existing rates
-              if foundRate['currencies_count']>=(self.currencies.count()-1):
-                newvalues = { "$set": {'price_record.'  + coin['xasset']: self.tools.convertToMoneroFormat(rate[1])}}
-              else:
-                newvalues = { "$set": {'price_record.'  + coin['xasset']: self.tools.convertToMoneroFormat(rate[1])},'$inc':{'currencies_count':+1}}
+              newvalues = { "$set": {'price_record.'  + coin['xasset']: self.tools.convertToMoneroFormat(rate[1])}}
               self.mydb.update_one("rates",query, newvalues)
             else:
               #we create the rate with the currency
@@ -68,7 +65,6 @@ class Coingecko:
               myRate['valid_from']=dt #datetime.utcfromtimestamp(int(str(rate[0])[:10]))
               myRate['price_record'][coin['xasset']]=self.tools.convertToMoneroFormat(rate[1])
               myRate['_id']=ts
-              myRate['currencies_count']=1
               self.mydb.insert_one("rates",myRate)
         else:
           print ("No rates for " + coin['xasset'])
