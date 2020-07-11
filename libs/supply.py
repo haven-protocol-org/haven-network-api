@@ -42,6 +42,11 @@ class CirculationSupplyResource:
           except Exception:
               resp.status=falcon.HTTP_401
               return 
+        #if to > lastblock then to=lastblock
+        lastBlock=self.mydb.find_last("blocks")
+        if lastBlock is not None and lastBlock['header']['timestamp']<dt_to:
+            dt_to=lastBlock['header']['timestamp']
+
         #if a start timestamp is specified, use this one, or from is to-1 year
         dt_from = dt_to - relativedelta(months=1)
         if 'from' in req.params:
@@ -55,17 +60,18 @@ class CirculationSupplyResource:
               resp.status=falcon.HTTP_401
               return 
         firstBlock=self.mydb.find_first("blocks")
-        lastBlock=self.mydb.find_last("blocks")
         if firstBlock is not None and firstBlock['header']['timestamp']>dt_from:
             dt_from=firstBlock['header']['timestamp']
-        if lastBlock is not None and lastBlock['header']['timestamp']<dt_to:
-            dt_to=lastBlock['header']['timestamp']
+        
         
         ts_to=calendar.timegm(dt_to.timetuple())
+        
         ts_from=calendar.timegm(dt_from.timetuple())
+        
         #We need ~100 pts of data, so each points will be seperated by ts_diff/100
         ts_diff = (ts_to-ts_from)/nbDatapoints #time elasped between start & end.
         print ("start : " +str (ts_from))
+
         payload={'supply_coins':[],'ykeys':[],'ykeys_shore_fee':[],'ykeys_deviation_ratio':[],'ykeys_deviation':[],'organic_coins':[],'breakdown_coins':[],'supply_value':[],'organic_value':[],'breakdown_value':[],'deviation_ratio':[],'deviation':[],'offshore_fee':[]}
         
         
