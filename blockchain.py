@@ -4,6 +4,7 @@ import math
 import re
 import os
 import mongodb
+import libs.twitter
 import pymongo
 from datetime import datetime
 from libs.utils import tools
@@ -14,6 +15,11 @@ class Blockchain:
     self.utils = tools()
     self.currencies=self.mydb.find("currencies")
     self.xhv=self.mydb.find_one("currencies",{'code':'xhv'})
+    if 'hv_consumer_key' in os.environ:
+      self.twitter=libs.twitter.Twitter(consumer_key=os.environ['hv_consumer_key'],
+        consumer_secret=os.environ['hv_consumer_secret'],
+        access_token_key=os.environ['hv_access_token_key'],
+        access_token_secret=os.environ['hv_access_token_secret'])
     
   def scanBlockchain(self):       
     #get Lastblock in blockchain
@@ -96,6 +102,19 @@ class Blockchain:
           if ('amount_minted' in myTx and myTx['amount_minted']>0) or ('amount_burnt' in myTx and myTx['amount_burnt']>0):
             CurFrom=self.mydb.find_one("currencies",{'_id': myTx['offshore_data'][0]})
             CurTo=self.mydb.find_one("currencies",{'_id': myTx['offshore_data'][1]})
+            amountFrom=self.utils.convertFromMoneroFormat(myTx['amount_burnt'])
+            amountTo=self.utils.convertFromMoneroFormat(myTx['amount_minted'])
+            
+            if hasattr(self,'twitter') and amountTo>10000:
+              message='💵💵💵💵💵💵💵💵💵💵💵💵💵 \n\r\n\r{} ${} minted in exchange of {} ${}'.format(amountTo,CurTo['xasset'],amountFrom,CurFrom['xasset'])
+              print (message)
+              self.twitter.tweet(message)
+            if hasattr(self,'twitter') and self.mydb.count('txs')==0:
+              #First User
+              message='🎉🎉🎉🎉🎉 Congrats to our first user 🎉🎉🎉🎉🎉\n\r\n\r💵💵💵💵💵💵💵💵💵💵💵💵💵 \n\r{} ${} minted in exchange of {} ${}'.format(amountTo,CurTo['xasset'],amountFrom,CurFrom['xasset'])
+              print (message)
+              self.twitter.tweet(message)
+
             myBlock['cumulative']['supply_offshore'][CurFrom['xasset']]-=self.utils.convertFromMoneroFormat(myTx['amount_burnt'])
             myBlock['cumulative']['supply_offshore'][CurTo['xasset']]+=self.utils.convertFromMoneroFormat(myTx['amount_minted'])
             #Write tx data

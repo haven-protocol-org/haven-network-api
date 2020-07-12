@@ -36,6 +36,10 @@ class Mongodb:
       print(e)
     return True
 
+  def count(self,collection,query={}):
+    response=self.mydb[collection].count(query)
+    return response
+
   def find_last(self,collection,query={}):
     try:
       response=self.find_one(collection,query,sort=[( '_id', pymongo.DESCENDING )])
