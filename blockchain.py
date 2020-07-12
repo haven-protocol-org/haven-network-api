@@ -32,7 +32,7 @@ class Blockchain:
     #check the last block in DB
     restart=self.mydb.find_last("blocks")
     if restart is not None and '_id' in restart:
-      restart=restart['_id']
+      restart=restart['_id']+1
     else:
       restart=0
 
@@ -56,7 +56,7 @@ class Blockchain:
         self.mydb.delete("blocks", {"_id": {"$gte": BlockRestart-scanHop+1} })
       scanHop=scanHop*2
 
-    print ("DB height is " + str(BlockRestart+1))
+    print ("DB height is " + str(BlockRestart))
 
     PreviousBlock=None
     for blockHeight in range(BlockRestart+1,lastBlock+1):
