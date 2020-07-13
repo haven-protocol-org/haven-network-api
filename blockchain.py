@@ -20,6 +20,11 @@ class Blockchain:
         consumer_secret=os.environ['hv_consumer_secret'],
         access_token_key=os.environ['hv_access_token_key'],
         access_token_secret=os.environ['hv_access_token_secret'])
+    self.network=self.getInfo()['text']['result']['nettype']
+    if self.network=='mainnet':
+      self.offshore_activate_height=640600
+    if self.network=='stagenet' or self.network=='testnet':
+      self.offshore_activate_height=0
     
   def scanBlockchain(self):       
     #get Lastblock in blockchain
@@ -94,7 +99,7 @@ class Blockchain:
       myBlock['pricing_spot_record']=rate['price_record']
 
       #Transactions in Block#Transactions in Block
-      if 'tx_hashes' in block['text']['result'] and blockHeight>640600:
+      if 'tx_hashes' in block['text']['result'] and blockHeight>self.offshore_activate_height:
         myBlock['tx_hashes']=block['text']['result']['tx_hashes']
         for tx in block['text']['result']['tx_hashes']:
           myTx=self.ParseTransaction(tx)
