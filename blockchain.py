@@ -93,8 +93,8 @@ class Blockchain:
       
       myBlock['pricing_spot_record']=rate['price_record']
 
-      #Transactions in Block
-      if 'tx_hashes' in block['text']['result']:
+      #Transactions in Block#Transactions in Block
+      if 'tx_hashes' in block['text']['result'] and blockHeight>640600:
         myBlock['tx_hashes']=block['text']['result']['tx_hashes']
         for tx in block['text']['result']['tx_hashes']:
           myTx=self.ParseTransaction(tx)
