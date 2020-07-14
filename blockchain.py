@@ -39,7 +39,7 @@ class Blockchain:
     if restart is not None and '_id' in restart:
       restart=restart['_id']+1
     else:
-      restart=0
+      restart=-1
 
     #Search for a reorganize
     scanHop=1
@@ -47,7 +47,7 @@ class Blockchain:
     while not finished:
       BlockRestart=restart-scanHop
       if BlockRestart<0:
-         BlockRestart=0
+         BlockRestart=-1
       blockDB=self.mydb.find_last("blocks",{"_id":BlockRestart-1})
       BlockBC=self.getBlockHeaderByHeight({"height":BlockRestart-1})
       if blockDB is None or ('result' in BlockBC['text'] and blockDB['header']['hash']==BlockBC['text']['result']['block_header']['hash']):
