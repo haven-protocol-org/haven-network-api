@@ -48,9 +48,9 @@ class Blockchain:
       BlockRestart=restart-scanHop
       if BlockRestart<0:
          BlockRestart=0
-      blockDB=self.mydb.find_last("blocks",{"_id":BlockRestart})
-      BlockBC=self.getBlockHeaderByHeight({"height":BlockRestart})
-      if blockDB is None or blockDB['header']['hash']==BlockBC['text']['result']['block_header']['hash']:
+      blockDB=self.mydb.find_last("blocks",{"_id":BlockRestart-1})
+      BlockBC=self.getBlockHeaderByHeight({"height":BlockRestart-1})
+      if blockDB is None or ('result' in BlockBC['text'] and blockDB['header']['hash']==BlockBC['text']['result']['block_header']['hash']):
         print ("Block " + str(BlockRestart) + " hash matches DB")
         finished=True
       else:
