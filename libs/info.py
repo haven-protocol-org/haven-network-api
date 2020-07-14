@@ -90,7 +90,7 @@ class InfoResource:
             payload['db_lastblock']['pricing_record']['unused1']=self.tools.convertFromMoneroFormat(LastBlock['header']['pricing_record']['unused1'])
             payload['db_lastblock']['pricing_record']['unused2']=self.tools.convertFromMoneroFormat(LastBlock['header']['pricing_record']['unused2'])
             payload['db_lastblock']['pricing_record']['unused3']=self.tools.convertFromMoneroFormat(LastBlock['header']['pricing_record']['unused3'])
-        if 'pricing_record' in payload['db_lastblock24']:
+        if LastBlock24 is not None and 'pricing_record' in payload['db_lastblock24']:
             payload['db_lastblock24']['pricing_record']['unused1']=self.tools.convertFromMoneroFormat(LastBlock24['header']['pricing_record']['unused1'])
             payload['db_lastblock24']['pricing_record']['unused2']=self.tools.convertFromMoneroFormat(LastBlock24['header']['pricing_record']['unused2'])
             payload['db_lastblock24']['pricing_record']['unused3']=self.tools.convertFromMoneroFormat(LastBlock24['header']['pricing_record']['unused3'])
