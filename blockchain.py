@@ -99,8 +99,9 @@ class Blockchain:
       myBlock['pricing_spot_record']=rate['price_record']
 
       #Transactions in Block#Transactions in Block
-      if 'tx_hashes' in block['text']['result'] and blockHeight>self.offshore_activate_height:
+      if 'tx_hashes' in block['text']['result']:
         myBlock['tx_hashes']=block['text']['result']['tx_hashes']
+      if 'tx_hashes' in block['text']['result'] and blockHeight>self.offshore_activate_height:
         for tx in block['text']['result']['tx_hashes']:
           myTx=self.ParseTransaction(tx)
           myTx['block_hash']=myBlock['header']['hash']
