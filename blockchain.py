@@ -169,6 +169,18 @@ class Blockchain:
     if 'amount_minted' in transactionJson:
       myTx['amount_minted']=transactionJson['amount_minted']
 
+    myTx['unlock_time']=transactionJson['unlock_time']
+    if 'rct_signatures' in transactionJson:
+      rctSig=transactionJson['rct_signatures']
+      if 'txnFee' in rctSig:
+        myTx['txnFee']=transactionJson['rct_signatures']['txnFee']
+      if 'txnFee_usd' in rctSig:
+        myTx['txnFee_usd']=transactionJson['rct_signatures']['txnFee_usd']
+      if 'txnOffshoreFee' in rctSig:
+        myTx['txnOffshoreFee']=transactionJson['rct_signatures']['txnOffshoreFee']
+      if 'txnOffshoreFee_usd' in rctSig:
+        myTx['txnOffshoreFee_usd']=transactionJson['rct_signatures']['txnOffshoreFee_usd']
+
     myTx['block_height']=transaction['text']['txs'][0]['block_height']
     myTx['block_timestamp']=datetime.utcfromtimestamp(transaction['text']['txs'][0]['block_timestamp'])
     myTx['_id']=tx
