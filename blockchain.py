@@ -170,6 +170,18 @@ class Blockchain:
       myTx['amount_minted']=transactionJson['amount_minted']
 
     myTx['unlock_time']=transactionJson['unlock_time']
+    myTx['priority']="N/A"
+    AbsoluteUnlock=myTx['unlock_time']-transaction['text']['txs'][0]['block_height']
+    if AbsoluteUnlock==60 or AbsoluteUnlock==59:
+      myTx['priority']="high"
+    elif AbsoluteUnlock==180 or AbsoluteUnlock==179:
+      myTx['priority']="medium"
+    elif AbsoluteUnlock==540 or AbsoluteUnlock==539:
+      myTx['priority']="normal"
+    elif AbsoluteUnlock==1620 or AbsoluteUnlock==1619:
+      myTx['priority']="low"
+    
+
     if 'rct_signatures' in transactionJson:
       rctSig=transactionJson['rct_signatures']
       if 'txnFee' in rctSig:
