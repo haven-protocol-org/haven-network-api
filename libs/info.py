@@ -26,7 +26,8 @@ class InfoResource:
         self.tools=libs.utils.tools()
         self.cg=coingecko.Coingecko()
         self.currencies=self.mongo.find("currencies")
-    @cache.cached(timeout=10)
+        
+    @cache.cached(timeout=10, query_string=True)
     def on_get(self, req, resp):
         dt_to = datetime.now()
         if 'timestamp' in req.params:
