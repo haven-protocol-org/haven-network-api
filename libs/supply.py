@@ -72,7 +72,21 @@ class CirculationSupplyResource:
         ts_diff = (ts_to-ts_from)/nbDatapoints #time elasped between start & end.
         print ("start : " +str (ts_from))
 
-        payload={'supply_coins':[],'ykeys':[],'ykeys_shore_fee':[],'ykeys_deviation_ratio':[],'ykeys_deviation':[],'organic_coins':[],'breakdown_coins':[],'supply_value':[],'organic_value':[],'breakdown_value':[],'deviation_ratio':[],'deviation':[],'offshore_fee':[]}
+        payload={'datapoints':nbDatapoints,
+            'supply_coins':[],
+            'ykeys':[],
+            'ykeys_shore_fee':[],
+            'ykeys_deviation_ratio':[],
+            'ykeys_deviation':[],
+            'organic_coins':[],
+            'breakdown_coins':[],
+            'supply_value':[],
+            'organic_value':[],
+            'breakdown_value':[],
+            'deviation_ratio':[],
+            'deviation':[],
+            'offshore_fee':[]
+        }
         
         
         for x in range(0,nbDatapoints+1):
