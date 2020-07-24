@@ -113,7 +113,7 @@ class CirculationSupplyResource:
 
             block=self.mydb.find_last("blocks",query)
             if block is not None:
-                print ("Point  : " + str(x) +  " on "  + str(nbDatapoints) + " Block : " + block['_id'])
+                print ("Point  : " + str(x) +  " on "  + str(nbDatapoints) + " Block : " + str(block['_id']))
                 TmpBlock['period']=dt_target.strftime("%Y-%m-%d %H:%M")
                 TmpBlockValue['period']=dt_target.strftime("%Y-%m-%d %H:%M")
                 TmpBlockOrganic['period']=TmpBlock['period']
