@@ -15,11 +15,11 @@ class Coingecko:
 
   def getInfo(self,coin):
     url=self.url+"coins/"+coin
-    response=requests.request("get",url)
+    response=requests.request("get",url, timeout=5)
     return response
   def getlastrate(self,coin, currency):
     url=self.url+"simple/price?ids="+coin+ "&vs_currencies=" + currency
-    response = requests.request("get", url)
+    response = requests.request("get", url, timeout=5)
     return response
 
   def importCurrencies(self):

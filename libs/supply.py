@@ -31,6 +31,8 @@ class CirculationSupplyResource:
         nbDatapoints=50
         if 'nbDatapoints' in req.params:
             nbDatapoints=int(req.params['nbDatapoints'])
+        
+
         dt_to = datetime.now()
         if 'to' in req.params:
           try:
@@ -105,13 +107,13 @@ class CirculationSupplyResource:
             OffShoreFee={}
             totalValue=0
 
-            print ("Point  : " + str(x) +  " on "  + str(nbDatapoints))
+            
             
             query={'header.timestamp':{'$lte':dt_target}}
 
             block=self.mydb.find_last("blocks",query)
             if block is not None:
-                print (block['_id'])
+                print ("Point  : " + str(x) +  " on "  + str(nbDatapoints) + " Block : " + block['_id'])
                 TmpBlock['period']=dt_target.strftime("%Y-%m-%d %H:%M")
                 TmpBlockValue['period']=dt_target.strftime("%Y-%m-%d %H:%M")
                 TmpBlockOrganic['period']=TmpBlock['period']

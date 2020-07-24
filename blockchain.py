@@ -243,11 +243,16 @@ class Blockchain:
   def callDeamonRPC(self,verb, query, data=""):
     callback={}
     headers={'Content-Type': 'application/json'}
-    if data:
-      response = requests.request(verb, self.url + "/" + query, data=json.dumps(data), headers=headers)
-    else:
-      response = requests.request(verb, self.url + "/" + query, headers=headers)    
-    callback['status_code']=response.status_code
+    try:
+      if data:
+        response = requests.request(verb, self.url + "/" + query, data=json.dumps(data), headers=headers, timeout=2)
+      else:
+        response = requests.request(verb, self.url + "/" + query, headers=headers, timeout=2)
+      callback['status_code']=response.status_code
+    except requests.exceptions.Timeout:
+      print ("Timeout on BC node")
+      pass
+
     try:
       extract=re.sub('signature": ".*[^a-zA-Z0-9].*",','signature": "",',response.text)
       callback['text']=json.loads(extract)

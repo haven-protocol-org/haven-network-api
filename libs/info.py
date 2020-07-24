@@ -41,9 +41,7 @@ class InfoResource:
         dt_24= dt_to - relativedelta(days=1)
         query={'header.timestamp':{'$lte':dt_24}}
         LastBlock24=self.mongo.find_last('blocks',query)
-        
-        print (LastBlock)
-        print (LastBlock24)
+
         payload={
             'coingecko':{},
             'bc':{},
