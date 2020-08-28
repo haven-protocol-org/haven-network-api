@@ -60,7 +60,7 @@ class InfoResource:
                 'supply':{},
             }
         }
-        coingecko=json.loads(self.cg.getInfo("haven").text)
+        coingecko=json.loads(self.cg.getInfo("haven"))
         del coingecko['description']
         payload['coingecko']=coingecko
 
