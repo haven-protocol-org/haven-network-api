@@ -15,12 +15,8 @@ class Coingecko:
 
   def getInfo(self,coin):
     url=self.url+"coins/"+coin
-    response=requests.request("get",url, timeout=5)
-    return response
-  def getlastrate(self,coin, currency):
-    url=self.url+"simple/price?ids="+coin+ "&vs_currencies=" + currency
     try:
-      response = requests.request("get", url, timeout=2)
+      response=requests.request("get",url, timeout=2)
       response = response.text
       f = open("/tmp/" + coin + ".json", "w")
       f.write(response)
@@ -28,6 +24,12 @@ class Coingecko:
     except:
       f = open("/tmp/" + coin + ".json", "r")
       response=f.read()
+    
+
+    return response
+  def getlastrate(self,coin, currency):
+    url=self.url+"simple/price?ids="+coin+ "&vs_currencies=" + currency
+    response = requests.request("get", url, timeout=5)
     return response
 
   def importCurrencies(self):
