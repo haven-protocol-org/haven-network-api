@@ -17,10 +17,13 @@ class Coingecko:
     url=self.url+"coins/"+coin
     try:
       response=requests.request("get",url, timeout=2)
-      response = response.text
-      f = open("/tmp/" + coin + ".json", "w")
-      f.write(response)
-      f.close()
+      if response.status_code==200:
+        f = open("/tmp/" + coin + ".json", "w")
+        f.write(response.text)
+        f.close()
+        response = response.text
+      else:
+        raise Exception('wrong status code')
     except:
       f = open("/tmp/" + coin + ".json", "r")
       response=f.read()
