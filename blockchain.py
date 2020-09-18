@@ -8,11 +8,14 @@ import libs.twitter
 import pymongo
 from datetime import datetime
 from libs.utils import tools
+import tempfile
+
 class Blockchain:
   def __init__(self):
     self.url=os.environ['hv_daemon_url']
     self.mydb = mongodb.Mongodb()
     self.utils = tools()
+    self.cacheFile=tempfile.NamedTemporaryFile().name
     self.currencies=self.mydb.find("currencies")
     self.xhv=self.mydb.find_one("currencies",{'code':'xhv'})
     if 'hv_consumer_key' in os.environ:
@@ -199,17 +202,21 @@ class Blockchain:
     return myTx
   
   def getInfo(self):
-    response=self.callDeamonJsonRPC("GET","get_info")
     try:
-      if 'status_code' in response and response.status_code==200:
-        f = open("/tmp/chain.json", "w")
-        f.write(response.text)
+      response=self.callDeamonJsonRPC("GET","get_info")
+      print (self.cacheFile)
+      if 'status_code' in response and response['status_code']==200:
+        f = open(self.cacheFile, "w")
+        json.dump(response['text'],f)
         f.close()
+        print ('live data')
       else:
         raise Exception('wrong status code')
     except:
-      f = open("/tmp/chain.json", "r")
-      response=f.read()
+      print ('cached data')
+      f = open(self.cacheFile, "r")
+      response=json.load(f)
+      f.close()
   
     return response
 
