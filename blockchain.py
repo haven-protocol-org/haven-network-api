@@ -207,7 +207,7 @@ class Blockchain:
       print (self.cacheFile)
       if 'status_code' in response and response['status_code']==200:
         f = open(self.cacheFile, "w")
-        json.dump(response['text'],f)
+        json.dump(response,f)
         f.close()
         print ('live data')
       else:
