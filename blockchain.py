@@ -199,7 +199,20 @@ class Blockchain:
     return myTx
   
   def getInfo(self):
-    return self.callDeamonJsonRPC("GET","get_info")
+    response=self.callDeamonJsonRPC("GET","get_info")
+    try:
+      if 'status_code' in response and response.status_code==200:
+        f = open("/tmp/chain.json", "w")
+        f.write(response.text)
+        f.close()
+      else:
+        raise Exception('wrong status code')
+    except:
+      f = open("/tmp/chain.json", "r")
+      response=f.read()
+  
+    return response
+
   def isMainnet(self):
     info=self.getInfo()
     return info['text']['result']['mainnet']
@@ -254,13 +267,14 @@ class Blockchain:
       pass
 
     try:
-      if 'test' in response:
+      if 'response' in locals() and response.status_code==200:
         extract=re.sub('signature": ".*[^a-zA-Z0-9].*",','signature": "",',response.text)
         callback['text']=json.loads(extract)
     except Exception as e:
       print (e)
-      print (response.text)
       print (extract)
-      callback['text']=response.text
+      if 'response' in locals() and response.status_code==200:
+        callback['text']=response.text
+        print (response.text)
     
     return callback
