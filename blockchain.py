@@ -254,8 +254,9 @@ class Blockchain:
       pass
 
     try:
-      extract=re.sub('signature": ".*[^a-zA-Z0-9].*",','signature": "",',response.text)
-      callback['text']=json.loads(extract)
+      if 'test' in response:
+        extract=re.sub('signature": ".*[^a-zA-Z0-9].*",','signature": "",',response.text)
+        callback['text']=json.loads(extract)
     except Exception as e:
       print (e)
       print (response.text)
