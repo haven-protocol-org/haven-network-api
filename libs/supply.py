@@ -140,10 +140,10 @@ class CirculationSupplyResource:
                         TmpBlockDeviation[currency['xasset'] + '-ma']=round(self.tools.convertFromMoneroFormat(block['header']['pricing_record'][currency['xasset']]),4)
                         BaseOffShoreFee=abs(block['header']['pricing_record'][currency['xasset']]-block['pricing_spot_record'][currency['xasset']])
 
-                        OffShoreFee[currency['xasset']+'-high']=round(self.tools.convertFromMoneroFormat(BaseOffShoreFee*100),4)
-                        OffShoreFee[currency['xasset']+'-medium']=round(self.tools.convertFromMoneroFormat(BaseOffShoreFee*63.61),4)
-                        OffShoreFee[currency['xasset']+'-normal']=round(self.tools.convertFromMoneroFormat(BaseOffShoreFee*16.37),4)
-                        OffShoreFee[currency['xasset']+'-low']=round(self.tools.convertFromMoneroFormat(BaseOffShoreFee*0.28),4)
+                        OffShoreFee[currency['xasset']+'-high']=round(self.tools.convertFromMoneroFormat(BaseOffShoreFee*110),4)
+                        OffShoreFee[currency['xasset']+'-medium']=round(self.tools.convertFromMoneroFormat(BaseOffShoreFee*100),4)
+                        OffShoreFee[currency['xasset']+'-normal']=round(self.tools.convertFromMoneroFormat(BaseOffShoreFee*75),4)
+                        OffShoreFee[currency['xasset']+'-low']=round(self.tools.convertFromMoneroFormat(BaseOffShoreFee*0.25),4)
 
                         
                     if currency['xasset']=='XHV':
