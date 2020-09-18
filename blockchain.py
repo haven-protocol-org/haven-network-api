@@ -199,7 +199,7 @@ class Blockchain:
     return myTx
   
   def getInfo(self):
-    return self.callDeamonJsonRPC("POST","get_info")
+    return self.callDeamonJsonRPC("GET","get_info")
   def isMainnet(self):
     info=self.getInfo()
     return info['text']['result']['mainnet']
