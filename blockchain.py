@@ -175,13 +175,13 @@ class Blockchain:
     myTx['unlock_time']=transactionJson['unlock_time']
     myTx['priority']="N/A"
     AbsoluteUnlock=myTx['unlock_time']-transaction['text']['txs'][0]['block_height']
-    if AbsoluteUnlock==60 or AbsoluteUnlock==59:
+    if AbsoluteUnlock==180 or AbsoluteUnlock==179:
       myTx['priority']="high"
-    elif AbsoluteUnlock==180 or AbsoluteUnlock==179:
+    elif AbsoluteUnlock==720 or AbsoluteUnlock==719:
       myTx['priority']="medium"
-    elif AbsoluteUnlock==540 or AbsoluteUnlock==539:
+    elif AbsoluteUnlock==1440 or AbsoluteUnlock==1439:
       myTx['priority']="normal"
-    elif AbsoluteUnlock==1620 or AbsoluteUnlock==1619:
+    elif AbsoluteUnlock==5040 or AbsoluteUnlock==5039:
       myTx['priority']="low"
     
 
