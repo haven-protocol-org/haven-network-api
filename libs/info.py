@@ -75,14 +75,20 @@ class InfoResource:
                 if LastBlock is not None and 'pricing_spot_record' in LastBlock and currency['xasset'] in LastBlock['pricing_spot_record']:
                     payload['db_lastblock']['pricing_spot_record'][currency['xasset']]=self.tools.convertFromMoneroFormat(LastBlock['pricing_spot_record'][currency['xasset']])
                     payload['db_lastblock']['pricing_record'][currency['xasset']]=self.tools.convertFromMoneroFormat(LastBlock['header']['pricing_record'][currency['xasset']])
+                    if currency['xasset']=='xUSD':
+                        payload['db_lastblock']['pricing_record'][currency['xasset']]=self.tools.convertFromMoneroFormat(LastBlock['header']['pricing_record']['unused1'])
                     payload['db_lastblock']['spot_ma_deviation'][currency['xasset']]=payload['db_lastblock']['pricing_record'][currency['xasset']]/payload['db_lastblock']['pricing_spot_record'][currency['xasset']]
                     payload['db_lastblock']['supply']=LastBlock['cumulative']['supply_offshore']
 
                 if LastBlock24 is not None and 'pricing_spot_record' in LastBlock24 and currency['xasset'] in LastBlock24['pricing_spot_record']:
                     payload['db_lastblock24']['pricing_spot_record'][currency['xasset']]=self.tools.convertFromMoneroFormat(LastBlock24['pricing_spot_record'][currency['xasset']])
                     payload['db_lastblock24']['pricing_record'][currency['xasset']]=self.tools.convertFromMoneroFormat(LastBlock24['header']['pricing_record'][currency['xasset']])
+                    if currency['xasset']=='xUSD':
+                        payload['db_lastblock24']['pricing_record'][currency['xasset']]=self.tools.convertFromMoneroFormat(LastBlock24['header']['pricing_record']['unused1'])
                     payload['db_lastblock24']['spot_ma_deviation'][currency['xasset']]=payload['db_lastblock24']['pricing_record'][currency['xasset']]/payload['db_lastblock24']['pricing_spot_record'][currency['xasset']]
                     payload['db_lastblock24']['supply']=LastBlock24['cumulative']['supply_offshore']
+                
+
 
         #Unused 1/2/3
         if 'pricing_record' in payload['db_lastblock']:
