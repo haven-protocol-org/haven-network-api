@@ -109,8 +109,20 @@ class Blockchain:
           myTx=self.ParseTransaction(tx)
           myTx['block_hash']=myBlock['header']['hash']
           if ('amount_minted' in myTx and myTx['amount_minted']>0) or ('amount_burnt' in myTx and myTx['amount_burnt']>0):
-            CurFrom=self.mydb.find_one("currencies",{'_id': myTx['offshore_data'][0]})
-            CurTo=self.mydb.find_one("currencies",{'_id': myTx['offshore_data'][1]})
+            print (len(myTx['offshore_data']))
+            print (myTx['offshore_data'])
+            if len (myTx['offshore_data'])>2:
+              #New xAsset Style
+              offshore=''.join(chr(i) for i in myTx['offshore_data'])
+              print (offshore)
+
+              CurFrom=self.mydb.find_one("currencies",{'xassetcase': offshore.split('-')[0]})
+              CurTo=self.mydb.find_one("currencies",{'xassetcase': offshore.split('-')[1]})
+
+            else:
+              CurFrom=self.mydb.find_one("currencies",{'_id': myTx['offshore_data'][0]})
+              CurTo=self.mydb.find_one("currencies",{'_id': myTx['offshore_data'][1]})
+            
             amountFrom=self.utils.convertFromMoneroFormat(myTx['amount_burnt'])
             amountTo=self.utils.convertFromMoneroFormat(myTx['amount_minted'])
             
@@ -157,8 +169,14 @@ class Blockchain:
 
   def ParseTransaction(self,tx):
     paramsTx={"txs_hashes":[tx],"decode_as_json":True}
+    print (paramsTx)
     transaction=self.getTransaction(paramsTx)
     transactionTxt=''.join(transaction['text']['txs_as_json'])
+    # TEMPORARY PATCH
+    transactionTxt=transactionTxt.replace('"asset_type": 4', '"asset_type": ')
+    transactionTxt=transactionTxt.replace('"asset_type": 3', '"asset_type": ')
+
+
     transactionJson=json.loads(transactionTxt)
     
     myTx={}

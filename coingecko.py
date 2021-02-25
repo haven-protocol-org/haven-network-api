@@ -41,6 +41,7 @@ class Coingecko:
     for currency in currencies:
       mydict={}
       mydict['xasset']=currencies[currency]
+      mydict['xassetcase']=currencies[currency].upper()
       mydict['code']=currenciesConvert[currencies[currency].lower()]
       mydict['_id']=currency
       self.mydb.insert_one("currencies",mydict)
