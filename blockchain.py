@@ -135,9 +135,19 @@ class Blockchain:
               message='🎉🎉🎉🎉🎉 Congrats to our first user 🎉🎉🎉🎉🎉\n\r\n\r💵💵💵💵💵💵💵💵💵💵💵💵💵 \n\r{} ${} minted in exchange of {} ${}'.format(amountTo,CurTo['xasset'],amountFrom,CurFrom['xasset'])
               print (message)
               self.twitter.tweet(message)
-
+            
+            txFee=myTx['txnFee']+myTx['txnOffshoreFee']
+            txFeeusd=myTx['txnFee_usd']+myTx['txnOffshoreFee_usd']
+            txFeexassets=myTx['txnFee_xasset']+myTx['txnOffshoreFee_xasset']
+            print ("fee usd" + str(txFeeusd))
+            print ("fee xasz" + str(txFeexassets))
+            print (CurFrom['xasset'])
+            myBlock['cumulative']['supply'][self.xhv['xasset']]-=self.utils.convertFromMoneroFormat(txFee+txFeeusd+txFeexassets)
+            myBlock['cumulative']['supply_offshore'][self.xhv['xasset']]-=self.utils.convertFromMoneroFormat(txFee+txFeeusd+txFeexassets)
             myBlock['cumulative']['supply_offshore'][CurFrom['xasset']]-=self.utils.convertFromMoneroFormat(myTx['amount_burnt'])
             myBlock['cumulative']['supply_offshore'][CurTo['xasset']]+=self.utils.convertFromMoneroFormat(myTx['amount_minted'])
+
+
             #Write tx data
             self.mydb.insert_one("txs",myTx)
       #Write Block data
@@ -153,7 +163,7 @@ class Blockchain:
 
   def getCumulative(self,myBlock,PreviousBlock,block):
     blockHeight=myBlock['_id']
-    if blockHeight>1:
+    if blockHeight>0:
       if PreviousBlock is None:
         PreviousBlock=self.mydb.find_one("blocks",{'_id':blockHeight-1})
       self.currencies.rewind()
@@ -191,28 +201,48 @@ class Blockchain:
       myTx['amount_minted']=transactionJson['amount_minted']
 
     myTx['unlock_time']=transactionJson['unlock_time']
-    myTx['priority']="N/A"
-    AbsoluteUnlock=myTx['unlock_time']-transaction['text']['txs'][0]['block_height']
-    if AbsoluteUnlock==180 or AbsoluteUnlock==179:
-      myTx['priority']="high"
-    elif AbsoluteUnlock==720 or AbsoluteUnlock==719:
-      myTx['priority']="medium"
-    elif AbsoluteUnlock==1440 or AbsoluteUnlock==1439:
-      myTx['priority']="normal"
-    elif AbsoluteUnlock==5040 or AbsoluteUnlock==5039:
-      myTx['priority']="low"
     
-
+    AbsoluteUnlock=myTx['unlock_time']-transaction['text']['txs'][0]['block_height']
+    if transaction['text']['txs'][0]['block_height']<741957:
+      #Old Fork
+      if AbsoluteUnlock>=1619:
+        myTx['priority']="low"
+      elif AbsoluteUnlock>=539:
+        myTx['priority']="normal"
+      elif AbsoluteUnlock>=179:
+        myTx['priority']="medium"
+      elif AbsoluteUnlock>=59:
+        myTx['priority']="high"
+      else:
+        myTx['priority']="N/A"
+    else:
+      #New fork
+      if AbsoluteUnlock>=5039:
+        myTx['priority']="low"
+      elif AbsoluteUnlock>=1439:
+        myTx['priority']="normal"
+      elif AbsoluteUnlock>=719:
+        myTx['priority']="medium"
+      elif AbsoluteUnlock>=179:
+        myTx['priority']="high"
+      else:
+        myTx['priority']="N/A"
+    
     if 'rct_signatures' in transactionJson:
       rctSig=transactionJson['rct_signatures']
       if 'txnFee' in rctSig:
         myTx['txnFee']=transactionJson['rct_signatures']['txnFee']
       if 'txnFee_usd' in rctSig:
         myTx['txnFee_usd']=transactionJson['rct_signatures']['txnFee_usd']
+      if 'txnFee_xasset' in rctSig:
+          myTx['txnFee_xasset']=transactionJson['rct_signatures']['txnFee_xasset']
+
       if 'txnOffshoreFee' in rctSig:
         myTx['txnOffshoreFee']=transactionJson['rct_signatures']['txnOffshoreFee']
       if 'txnOffshoreFee_usd' in rctSig:
         myTx['txnOffshoreFee_usd']=transactionJson['rct_signatures']['txnOffshoreFee_usd']
+      if 'txnOffshoreFee_xasset' in rctSig:
+        myTx['txnOffshoreFee_xasset']=transactionJson['rct_signatures']['txnOffshoreFee_xasset']
 
     myTx['block_height']=transaction['text']['txs'][0]['block_height']
     myTx['block_timestamp']=datetime.utcfromtimestamp(transaction['text']['txs'][0]['block_timestamp'])
