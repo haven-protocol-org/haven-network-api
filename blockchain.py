@@ -104,17 +104,14 @@ class Blockchain:
       #Transactions in Block#Transactions in Block
       if 'tx_hashes' in block['text']['result']:
         myBlock['tx_hashes']=block['text']['result']['tx_hashes']
-      if 'tx_hashes' in block['text']['result'] and blockHeight>self.offshore_activate_height:
+
         for tx in block['text']['result']['tx_hashes']:
           myTx=self.ParseTransaction(tx)
           myTx['block_hash']=myBlock['header']['hash']
           if ('amount_minted' in myTx and myTx['amount_minted']>0) or ('amount_burnt' in myTx and myTx['amount_burnt']>0):
-            print (len(myTx['offshore_data']))
-            print (myTx['offshore_data'])
             if len (myTx['offshore_data'])>2:
               #New xAsset Style
               offshore=''.join(chr(i) for i in myTx['offshore_data'])
-              print (offshore)
 
               CurFrom=self.mydb.find_one("currencies",{'xassetcase': offshore.split('-')[0]})
               CurTo=self.mydb.find_one("currencies",{'xassetcase': offshore.split('-')[1]})
@@ -136,17 +133,24 @@ class Blockchain:
               print (message)
               self.twitter.tweet(message)
             
+            txFeexassets=0
+            txFeeusd=0
             txFee=myTx['txnFee']+myTx['txnOffshoreFee']
-            txFeeusd=myTx['txnFee_usd']+myTx['txnOffshoreFee_usd']
-            txFeexassets=myTx['txnFee_xasset']+myTx['txnOffshoreFee_xasset']
-            print ("fee usd" + str(txFeeusd))
-            print ("fee xasz" + str(txFeexassets))
-            print (CurFrom['xasset'])
+
+            if 'txnOffshoreFee_usd' in myTx:
+              txFeeusd=myTx['txnFee_usd']+myTx['txnOffshoreFee_usd']
+            if 'txnOffshoreFee_xasset' in myTx:
+              txFeexassets=myTx['txnFee_xasset']+myTx['txnOffshoreFee_xasset']
+
             myBlock['cumulative']['supply'][self.xhv['xasset']]-=self.utils.convertFromMoneroFormat(txFee+txFeeusd+txFeexassets)
             myBlock['cumulative']['supply_offshore'][self.xhv['xasset']]-=self.utils.convertFromMoneroFormat(txFee+txFeeusd+txFeexassets)
             myBlock['cumulative']['supply_offshore'][CurFrom['xasset']]-=self.utils.convertFromMoneroFormat(myTx['amount_burnt'])
             myBlock['cumulative']['supply_offshore'][CurTo['xasset']]+=self.utils.convertFromMoneroFormat(myTx['amount_minted'])
-
+          else:
+            txFee=myTx['txnFee']+myTx['txnOffshoreFee']
+            myBlock['cumulative']['supply'][self.xhv['xasset']]-=self.utils.convertFromMoneroFormat(txFee)
+            myBlock['cumulative']['supply_offshore'][self.xhv['xasset']]-=self.utils.convertFromMoneroFormat(txFee)
+       
 
             #Write tx data
             self.mydb.insert_one("txs",myTx)
