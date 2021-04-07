@@ -147,13 +147,15 @@ class Blockchain:
             myBlock['cumulative']['supply_offshore'][CurFrom['xasset']]-=self.utils.convertFromMoneroFormat(myTx['amount_burnt'])
             myBlock['cumulative']['supply_offshore'][CurTo['xasset']]+=self.utils.convertFromMoneroFormat(myTx['amount_minted'])
           else:
-            txFee=myTx['txnFee']+myTx['txnOffshoreFee']
+            txFee=myTx['txnFee']
+            if 'txnOffshoreFee' in myTx:
+              txFee+=myTx['txnOffshoreFee']
             myBlock['cumulative']['supply'][self.xhv['xasset']]-=self.utils.convertFromMoneroFormat(txFee)
             myBlock['cumulative']['supply_offshore'][self.xhv['xasset']]-=self.utils.convertFromMoneroFormat(txFee)
        
 
-            #Write tx data
-            self.mydb.insert_one("txs",myTx)
+          #Write tx data
+          self.mydb.insert_one("txs",myTx)
       #Write Block data
       self.mydb.insert_one("blocks",myBlock)
 
