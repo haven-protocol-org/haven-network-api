@@ -49,40 +49,155 @@ class Coingecko:
   def importExchangePrice(self,duration=30,granularity='days'):
     self.currencies.rewind()
     print (self.currencies.count())
-    for coin in self.currencies:
-        if coin['code']=='xhv':
-          continue
-        print ("Import Currency : " + coin['code'] + " for the last " + str(duration) + " days.")
-        url=self.url+ "coins/haven/market_chart?vs_currency=" + coin['code'] + "&days="+str(duration)
-        print (url)
-        response = requests.request("get", url)
-        rates=json.loads(response.text)
-        if 'prices' in rates:          
-          for rate in rates['prices']:
-            dt=datetime.utcfromtimestamp(int(str(rate[0])[:10]))
-            #print (dt)
-            dt=dt.replace(minute=math.floor(dt.minute/10)*10 ,second=0)
-            #print (dt)
-            ts=datetime.timestamp(dt)
-            #We check on DB if a rates exists with this timestamp
-            query={'_id': ts}
-            foundRate=self.mydb.find_last("rates",query)
-            if foundRate is not None:
-              #We update existing rates
-              if coin['xasset'] in foundRate['price_record']:
-                newvalues = { "$set": {'price_record.'  + coin['xasset']: self.tools.convertToMoneroFormat(rate[1])}}
-              else:
-                newvalues = { "$set": {'price_record.'  + coin['xasset']: self.tools.convertToMoneroFormat(rate[1])},'$inc':{'currencies_count':+1}}
-              self.mydb.update_one("rates",query, newvalues)
-            else:
-              #we create the rate with the currency
-              myRate={'price_record':{}}
-              print ('no rate found')
-              myRate['valid_from']=dt #datetime.utcfromtimestamp(int(str(rate[0])[:10]))
-              myRate['price_record'][coin['xasset']]=self.tools.convertToMoneroFormat(rate[1])
-              myRate['_id']=ts
-              myRate['currencies_count']=1
-              self.mydb.insert_one("rates",myRate)
+    #retrieving value for BTC
+    url=self.url+ "coins/bitcoin/market_chart?vs_currency=usd&days="+str(duration)
+    response = requests.request("get", url)
+    rates=json.loads(response.text)
+    if 'prices' in rates:
+      for rate in rates['prices']:
+        dt=datetime.utcfromtimestamp(int(str(rate[0])[:10]))
+        dt=dt.replace(minute=math.floor(dt.minute/10)*10 ,second=0)
+        ts=datetime.timestamp(dt)
+        #We check on DB if a rates exists with this timestamp
+        query={'_id': ts}
+        foundRate=self.mydb.find_last("rates",query)
+        if foundRate is not None:
+          #We update existing rates
+          if 'xbtc' in foundRate['price_record']:
+            newvalues = { "$set": {'price_record.xbtc': self.tools.convertToMoneroFormat(1/rate[1])}}
+          else:
+            newvalues = { "$set": {'price_record.xbtc': self.tools.convertToMoneroFormat(1/rate[1])},'$inc':{'currencies_count':+1}}
+          self.mydb.update_one("rates",query, newvalues)
         else:
-          print ("No rates for " + coin['xasset'])
+          #we create the rate with the currency
+          myRate={'price_record':{}}
+          print ('no rate found')
+          myRate['valid_from']=dt #datetime.utcfromtimestamp(int(str(rate[0])[:10]))
+          myRate['price_record']['xbtc']=self.tools.convertToMoneroFormat(1/rate[1])
+          myRate['_id']=ts
+          myRate['currencies_count']=1
+          self.mydb.insert_one("rates",myRate)
+    #retrieving value for XHV
+    url=self.url+ "coins/haven/market_chart?vs_currency=usd&days="+str(duration)
+    response = requests.request("get", url)
+    rates=json.loads(response.text)
+    if 'prices' in rates:
+      for rate in rates['prices']:
+        dt=datetime.utcfromtimestamp(int(str(rate[0])[:10]))
+        dt=dt.replace(minute=math.floor(dt.minute/10)*10 ,second=0)
+        ts=datetime.timestamp(dt)
+        #We check on DB if a rates exists with this timestamp
+        query={'_id': ts}
+        foundRate=self.mydb.find_last("rates",query)
+        if foundRate is not None:
+          #We update existing rates
+          if 'xusd' in foundRate['price_record']:
+            newvalues = { "$set": {'price_record.xusd': self.tools.convertToMoneroFormat(rate[1])}}
+          else:
+            newvalues = { "$set": {'price_record.xusd': self.tools.convertToMoneroFormat(rate[1])},'$inc':{'currencies_count':+1}}
+          self.mydb.update_one("rates",query, newvalues)
+        else:
+          #we create the rate with the currency
+          myRate={'price_record':{}}
+          print ('no rate found')
+          myRate['valid_from']=dt #datetime.utcfromtimestamp(int(str(rate[0])[:10]))
+          myRate['price_record']['xusd']=self.tools.convertToMoneroFormat(rate[1])
+          myRate['_id']=ts
+          myRate['currencies_count']=1
+          self.mydb.insert_one("rates",myRate)
+    #We use the previous rate found and query the forex API
+    PreviousdateStr=""
+    if 'prices' in rates:
+      for rate in rates['prices']:
+        dt=datetime.utcfromtimestamp(int(str(rate[0])[:10]))
+        dt=dt.replace(minute=math.floor(dt.minute/10)*10 ,second=0)
+        ts=datetime.timestamp(dt)
+        dateStr = dt.strftime("%Y-%m-%d")
+        if dateStr!=PreviousdateStr:
+          url= "https://api.ratesapi.io/api/"+ dateStr +"?base=USD&symbols=AUD,CAD,CHF,CNY,EUR,GBP,JPY,NOK,NZD"
+          response = requests.request("get", url)
+          exchangesRates=json.loads(response.text)
+          PreviousdateStr=dateStr
+        #We check on DB if a rates exists with this timestamp
+        query={'_id': ts}
+        foundRate=self.mydb.find_last("rates",query)
+    
+        for exchangeRate in exchangesRates['rates']:
+          xasset="x" + exchangeRate.lower()
+          print (exchangeRate)
+          print (exchangesRates['rates'][exchangeRate])
+
+          if foundRate is not None:
+            #We update existing rates
+            if xasset not in foundRate['price_record'] or foundRate['price_record'][xasset]!=0:
+              if xasset in foundRate['price_record']:
+                newvalues = { "$set": {'price_record.' + xasset: self.tools.convertToMoneroFormat(exchangesRates['rates'][exchangeRate])}}
+              else:
+                newvalues = { "$set": {'price_record.' + xasset: self.tools.convertToMoneroFormat(exchangesRates['rates'][exchangeRate])},'$inc':{'currencies_count':+1}}
+              self.mydb.update_one("rates",query, newvalues)
+              print (newvalues)
+          else:
+            #we create the rate with the currency
+            myRate={'price_record':{}}
+            print ('no rate found')
+            myRate['valid_from']=dt #datetime.utcfromtimestamp(int(str(rate[0])[:10]))
+            myRate['price_record'][xasset]=self.tools.convertToMoneroFormat(exchangesRates['rates'][exchangeRate])
+            myRate['_id']=ts
+            myRate['currencies_count']=1
+            self.mydb.insert_one("rates",myRate)
+            print (myRate)
+    
+    
+    #We use the previous rate found and query the metal API
+    PreviousdateStr=""
+    if 'prices' in rates:
+      for rate in rates['prices']:
+        dt=datetime.utcfromtimestamp(int(str(rate[0])[:10]))
+        dt=dt.replace(minute=math.floor(dt.minute/10)*10 ,second=0)
+        ts=datetime.timestamp(dt)
+        dateStr = dt.strftime("%Y-%m-%d")
+        if dateStr!=PreviousdateStr:
+          headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+          url="https://data-asg.goldprice.org/dbXRates/USD"
+          response = requests.request("get", url, headers=headers)
+          print (response.text)
+          exchangesRate=json.loads(response.text)
+          PreviousdateStr=dateStr
+        #We check on DB if a rates exists with this timestamp
+        query={'_id': ts}
+        foundRate=self.mydb.find_last("rates",query)
+        
+        xasset=exchangeRate.lower()
+
+        if foundRate is not None:
+          print (foundRate)
+          #We update existing rates
+          if 'xau' not in foundRate['price_record'] or foundRate['price_record']['xau']!=0:
+            if xasset in foundRate['price_record']:
+              newvalues = { "$set": {'price_record.xau': self.tools.convertToMoneroFormat(exchangesRate['items'][0]['xauPrice']),
+                                    'price_record.xag': self.tools.convertToMoneroFormat(exchangesRate['items'][0]['xagPrice'])}}
+            else:
+              newvalues = { "$set": {'price_record.xau': self.tools.convertToMoneroFormat(exchangesRate['items'][0]['xauPrice']), 
+                                    'price_record.xag': self.tools.convertToMoneroFormat(exchangesRate['items'][0]['xagPrice'])},
+                                    '$inc':{'currencies_count':+1}}
+            self.mydb.update_one("rates",query, newvalues)
+          if 'xag' not in foundRate['price_record'] or foundRate['price_record']['xag']!=0:
+            if xasset in foundRate['price_record']:
+              newvalues = { "$set": {'price_record.xau': self.tools.convertToMoneroFormat(exchangesRate['items'][0]['xauPrice'])}}
+            else:
+              newvalues = { "$set": {'price_record.xag': self.tools.convertToMoneroFormat(exchangesRate['items'][0]['xagPrice'])},
+                                    '$inc':{'currencies_count':+1}}
+            self.mydb.update_one("rates",query, newvalues)
+        else:
+          #we create the rate with the currency
+          myRate={'price_record':{}}
+          print ('no rate found')
+          myRate['valid_from']=dt #datetime.utcfromtimestamp(int(str(rate[0])[:10]))
+          myRate['price_record']['xau']=self.tools.convertToMoneroFormat(exchangesRate['items'][0]['xauPrice'])
+          myRate['price_record']['xag']=self.tools.convertToMoneroFormat(exchangesRate['items'][0]['xagPrice'])
+          myRate['_id']=ts
+          myRate['currencies_count']=1
+          self.mydb.insert_one("rates",myRate)
+
+    exit()
     return response
