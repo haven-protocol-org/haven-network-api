@@ -199,5 +199,4 @@ class Coingecko:
           myRate['currencies_count']=1
           self.mydb.insert_one("rates",myRate)
 
-    exit()
     return response
