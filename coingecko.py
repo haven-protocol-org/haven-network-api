@@ -93,12 +93,9 @@ class Coingecko:
         query={'_id': ts}
         foundRate=self.mydb.find_last("rates",query)
         if foundRate is not None:
-          #We update existing rates
-          if 'xUSD' in foundRate['price_record']:
-            newvalues = { "$set": {'price_record.xUSD': self.tools.convertToMoneroFormat(rate[1])}}
-          else:
+          if 'xUSD' not in foundRate['price_record'] or foundRate['price_record']['xUSD']==0:
             newvalues = { "$set": {'price_record.xUSD': self.tools.convertToMoneroFormat(rate[1])},'$inc':{'currencies_count':+1}}
-          self.mydb.update_one("rates",query, newvalues)
+            self.mydb.update_one("rates",query, newvalues)
         else:
           #we create the rate with the currency
           myRate={'price_record':{}}
@@ -132,11 +129,8 @@ class Coingecko:
 
           if foundRate is not None:
             #We update existing rates
-            if xasset not in foundRate['price_record'] or foundRate['price_record'][xasset]!=0:
-              if xasset in foundRate['price_record']:
-                newvalues = { "$set": {'price_record.' + xasset: self.tools.convertToMoneroFormat(exchangesRates['rates'][exchangeRate])}}
-              else:
-                newvalues = { "$set": {'price_record.' + xasset: self.tools.convertToMoneroFormat(exchangesRates['rates'][exchangeRate])},'$inc':{'currencies_count':+1}}
+            if xasset not in foundRate['price_record'] or foundRate['price_record'][xasset]==0:
+              newvalues = { "$set": {'price_record.' + xasset: self.tools.convertToMoneroFormat(exchangesRates['rates'][exchangeRate])},'$inc':{'currencies_count':+1}}
               self.mydb.update_one("rates",query, newvalues)
               print (newvalues)
           else:
@@ -175,19 +169,11 @@ class Coingecko:
         if foundRate is not None:
           print (foundRate)
           #We update existing rates
-          if 'xAU' not in foundRate['price_record'] or foundRate['price_record']['xAU']!=0:
-            if xasset in foundRate['price_record']:
-              newvalues = { "$set": {'price_record.xAU': self.tools.convertToMoneroFormat(exchangesRate['items'][0]['xauPrice'])}}
-            else:
-              newvalues = { "$set": {'price_record.xAU': self.tools.convertToMoneroFormat(exchangesRate['items'][0]['xauPrice'])},
-                                    '$inc':{'currencies_count':+1}}
+          if 'xAU' not in foundRate['price_record'] or foundRate['price_record']['xAU']==0:
+            newvalues = { "$set": {'price_record.xAU': self.tools.convertToMoneroFormat(exchangesRate['items'][0]['xauPrice'])},'$inc':{'currencies_count':+1}}
             self.mydb.update_one("rates",query, newvalues)
-          if 'xAG' not in foundRate['price_record'] or foundRate['price_record']['xAG']!=0:
-            if xasset in foundRate['price_record']:
-              newvalues = { "$set": {'price_record.xAG': self.tools.convertToMoneroFormat(exchangesRate['items'][0]['xagPrice'])}}
-            else:
-              newvalues = { "$set": {'price_record.xAG': self.tools.convertToMoneroFormat(exchangesRate['items'][0]['xagPrice'])},
-                                    '$inc':{'currencies_count':+1}}
+          if 'xAG' not in foundRate['price_record'] or foundRate['price_record']['xAG']==0:
+            newvalues = { "$set": {'price_record.xAG': self.tools.convertToMoneroFormat(exchangesRate['items'][0]['xagPrice'])},'$inc':{'currencies_count':+1}}
             self.mydb.update_one("rates",query, newvalues)
         else:
           #we create the rate with the currency
