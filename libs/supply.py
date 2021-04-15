@@ -143,7 +143,7 @@ class CirculationSupplyResource:
                             BaseOffShoreFee=abs(block['header']['pricing_record'][currency['xasset']]-block['pricing_spot_record'][currency['xasset']])
                         else:
                             TmpBlockDeviationRatio[currency['xasset']]=round(block['header']['pricing_record']['unused1']/block['pricing_spot_record'][currency['xasset']]*100,4)
-                            TmpBlockDeviation[currency['xasset'] + '-ma']=round(self.tools.convertFromMoneroFormat(block['header']['pricing_record'][currency['xasset']]),4)
+                            TmpBlockDeviation[currency['xasset'] + '-ma']=round(self.tools.convertFromMoneroFormat(block['header']['pricing_record']['unused1']),4)
                             BaseOffShoreFee=abs(block['header']['pricing_record']['unused1']-block['pricing_spot_record'][currency['xasset']])                           
                         
                         
