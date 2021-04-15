@@ -51,8 +51,10 @@ class Coingecko:
     self.currencies.rewind()
     print (self.currencies.count())
     #retrieving value for BTC
+    
+    headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
     url=self.url+ "coins/bitcoin/market_chart?vs_currency=usd&days="+str(duration)
-    response = requests.request("get", url)
+    response = requests.request("get", url, headers=headers)
     rates=json.loads(response.text)
     if 'prices' in rates:
       for rate in rates['prices']:
@@ -80,7 +82,7 @@ class Coingecko:
           self.mydb.insert_one("rates",myRate)
     #retrieving value for XHV
     url=self.url+ "coins/haven/market_chart?vs_currency=usd&days="+str(duration)
-    response = requests.request("get", url)
+    response = requests.request("get", url, headers=headers)
     rates=json.loads(response.text)
     if 'prices' in rates:
       for rate in rates['prices']:
