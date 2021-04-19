@@ -132,6 +132,8 @@ class CirculationSupplyResource:
                     TmpBlock[currency['xasset']]=round(block['cumulative']['supply_offshore'][currency['xasset']],4)
                     if currency['xasset']=='XHV':
                         TmpBlockValue[currency['xasset']]=round(block['cumulative']['supply_offshore'][currency['xasset']]*self.tools.convertFromMoneroFormat(block['pricing_spot_record']['xUSD']),4)
+                    elif currency['xasset']=='xUSD':
+                        TmpBlockValue[currency['xasset']]=TmpBlock[currency['xasset']]
                     else:
                         TmpBlockValue[currency['xasset']]=round(TmpBlock[currency['xasset']]/self.tools.convertFromMoneroFormat(block['pricing_spot_record'][currency['xasset']]),4)
                     totalCoins+=TmpBlock[currency['xasset']]
