@@ -25,13 +25,15 @@ class CirculationSupplyResource:
         self.tools=libs.utils.tools()
         self.currencies=self.mydb.find("currencies")
     
-    @cache.cached(timeout=60)
+    #@cache.cached(timeout=60)
     def on_get(self, req, resp):
         #If an end timestamp is specified, use this one, or timestamp=now()
         nbDatapoints=50
         if 'nbDatapoints' in req.params:
             nbDatapoints=int(req.params['nbDatapoints'])
         
+        if 'currency' in req.params:
+            self.currencies=self.mydb.find("currencies",{'xassetcase':req.params['currency'].upper()})
 
         dt_to = datetime.now()
         if 'to' in req.params:
@@ -123,13 +125,17 @@ class CirculationSupplyResource:
                 TmpBlockDeviation['period']=TmpBlock['period']
                 OffShoreFee['period']=TmpBlock['period']
                 
+
                 self.currencies.rewind()
                 for currency in self.currencies:
+                    print (currency)
                     TmpBlock[currency['xasset']]=round(block['cumulative']['supply_offshore'][currency['xasset']],4)
                     if currency['xasset']=='XHV':
                         TmpBlockValue[currency['xasset']]=round(block['cumulative']['supply_offshore'][currency['xasset']]*self.tools.convertFromMoneroFormat(block['pricing_spot_record']['xUSD']),4)
-                    else:
+                    elif currency['xasset']=='xUSD':
                         TmpBlockValue[currency['xasset']]=TmpBlock[currency['xasset']]
+                    else:
+                        TmpBlockValue[currency['xasset']]=round(TmpBlock[currency['xasset']]/self.tools.convertFromMoneroFormat(block['pricing_spot_record'][currency['xasset']]),4)
                     totalCoins+=TmpBlock[currency['xasset']]
                     totalValue+=TmpBlockValue[currency['xasset']]
 

@@ -38,12 +38,14 @@ class Coingecko:
   def importCurrencies(self):
     currencies={65:"XHV", 66:"xAG", 67:"xAU", 68:"xAUD", 69:"xBTC", 70:"xCAD", 71:"xCHF", 72:"xCNY", 73:"xEUR", 74:"xGBP", 75:"xJPY", 76:"xNOK", 77:"xNZD", 78:"xUSD"}
     currenciesConvert={'xhv':'xhv','xbtc':'btc','xusd':'usd','xag':"xag", 'xau':'xau', 'xaud':'aud', 'xcad':'cad','xchf':'chf', 'xcny':'cny', 'xeur':'eur', 'xgbp':'gbp', 'xjpy':'jpy', 'xnok':'nok', 'xnzd':'nzd'}
+    currenciesName={'xhv':'Haven','xbtc':'Bitcoin','xusd':'Dollar','xag':"Silver", 'xau':'Gold', 'xaud':'Australian dollar', 'xcad':'Canadian dollar','xchf':'Swiss franc', 'xcny':'Yuan', 'xeur':'Euro', 'xgbp':'Pound sterling', 'xjpy':'Yen', 'xnok':'Norwegian krone', 'xnzd':'New Zealand dollar'}
     for currency in currencies:
       mydict={}
       mydict['xasset']=currencies[currency]
       print (currencies[currency])
       mydict['xassetcase']=currencies[currency].upper()
       mydict['code']=currenciesConvert[currencies[currency].lower()]
+      mydict['name']=currenciesName[currencies[currency].lower()]
       mydict['_id']=currency
       self.mydb.insert_one("currencies",mydict)
 
@@ -170,10 +172,10 @@ class Coingecko:
           print (foundRate)
           #We update existing rates
           if 'xAU' not in foundRate['price_record'] or foundRate['price_record']['xAU']==0:
-            newvalues = { "$set": {'price_record.xAU': self.tools.convertToMoneroFormat(exchangesRate['items'][0]['xauPrice'])},'$inc':{'currencies_count':+1}}
+            newvalues = { "$set": {'price_record.xAU': self.tools.convertToMoneroFormat(1/exchangesRate['items'][0]['xauPrice'])},'$inc':{'currencies_count':+1}}
             self.mydb.update_one("rates",query, newvalues)
           if 'xAG' not in foundRate['price_record'] or foundRate['price_record']['xAG']==0:
-            newvalues = { "$set": {'price_record.xAG': self.tools.convertToMoneroFormat(exchangesRate['items'][0]['xagPrice'])},'$inc':{'currencies_count':+1}}
+            newvalues = { "$set": {'price_record.xAG': self.tools.convertToMoneroFormat(1/exchangesRate['items'][0]['xagPrice'])},'$inc':{'currencies_count':+1}}
             self.mydb.update_one("rates",query, newvalues)
         else:
           #we create the rate with the currency
