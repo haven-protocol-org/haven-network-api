@@ -60,12 +60,12 @@ class InfoResource:
                 'supply':{},
             }
         }
-        if 'cg' in req.params and req.params['cg']!='0':
+        if 'cg' not in req.params or req.params['cg']!='0':
             coingecko=json.loads(self.cg.getInfo("haven"))
             del coingecko['description']
             payload['coingecko']=coingecko
 
-        if 'bc' in req.params and req.params['bc']!='0':  
+        if 'bc' not in req.params or req.params['bc']!='0':
             payload['bc']=self.bc.getInfo()['text']
 
         if 'currency' in req.params:
