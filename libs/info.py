@@ -27,7 +27,7 @@ class InfoResource:
         self.cg=coingecko.Coingecko()
         self.currencies=self.mongo.find("currencies")
 
-    @cache.cached(timeout=10)
+    #@cache.cached(timeout=10)
     def on_get(self, req, resp):
         dt_to = datetime.now()
         if 'timestamp' in req.params:
@@ -60,11 +60,17 @@ class InfoResource:
                 'supply':{},
             }
         }
-        coingecko=json.loads(self.cg.getInfo("haven"))
-        del coingecko['description']
-        payload['coingecko']=coingecko
+        if 'cg' in req.params and req.params['cg']!='0':
+            coingecko=json.loads(self.cg.getInfo("haven"))
+            del coingecko['description']
+            payload['coingecko']=coingecko
 
-        payload['bc']=self.bc.getInfo()['text']
+        if 'bc' in req.params and req.params['bc']!='0':  
+            payload['bc']=self.bc.getInfo()['text']
+
+        if 'currency' in req.params:
+            self.currencies=self.mongo.find("currencies",{'xassetcase':req.params['currency'].upper()})
+
         self.currencies.rewind()
         payload['db_lastblock']['height']=LastBlock['_id']
         if LastBlock24 is not None:
@@ -75,30 +81,32 @@ class InfoResource:
                 if LastBlock is not None and 'pricing_spot_record' in LastBlock and currency['xasset'] in LastBlock['pricing_spot_record']:
                     payload['db_lastblock']['pricing_spot_record'][currency['xasset']]=self.tools.convertFromMoneroFormat(LastBlock['pricing_spot_record'][currency['xasset']])
                     payload['db_lastblock']['pricing_record'][currency['xasset']]=self.tools.convertFromMoneroFormat(LastBlock['header']['pricing_record'][currency['xasset']])
+
                     if currency['xasset']=='xUSD':
                         payload['db_lastblock']['pricing_record'][currency['xasset']]=self.tools.convertFromMoneroFormat(LastBlock['header']['pricing_record']['unused1'])
+                    
                     payload['db_lastblock']['spot_ma_deviation'][currency['xasset']]=payload['db_lastblock']['pricing_record'][currency['xasset']]/payload['db_lastblock']['pricing_spot_record'][currency['xasset']]
-                    payload['db_lastblock']['supply']=LastBlock['cumulative']['supply_offshore']
+                    payload['db_lastblock']['supply']=LastBlock['cumulative']['supply_offshore'][currency['xasset']]
 
                 if LastBlock24 is not None and 'pricing_spot_record' in LastBlock24 and currency['xasset'] in LastBlock24['pricing_spot_record']:
+                    
                     payload['db_lastblock24']['pricing_spot_record'][currency['xasset']]=self.tools.convertFromMoneroFormat(LastBlock24['pricing_spot_record'][currency['xasset']])
                     payload['db_lastblock24']['pricing_record'][currency['xasset']]=self.tools.convertFromMoneroFormat(LastBlock24['header']['pricing_record'][currency['xasset']])
                     if currency['xasset']=='xUSD':
                         payload['db_lastblock24']['pricing_record'][currency['xasset']]=self.tools.convertFromMoneroFormat(LastBlock24['header']['pricing_record']['unused1'])
                     payload['db_lastblock24']['spot_ma_deviation'][currency['xasset']]=payload['db_lastblock24']['pricing_record'][currency['xasset']]/payload['db_lastblock24']['pricing_spot_record'][currency['xasset']]
-                    payload['db_lastblock24']['supply']=LastBlock24['cumulative']['supply_offshore']
-                
-
+                    payload['db_lastblock24']['supply']=LastBlock24['cumulative']['supply_offshore'][currency['xasset']]
 
         #Unused 1/2/3
-        if 'pricing_record' in payload['db_lastblock']:
-            payload['db_lastblock']['pricing_record']['unused1']=self.tools.convertFromMoneroFormat(LastBlock['header']['pricing_record']['unused1'])
-            payload['db_lastblock']['pricing_record']['unused2']=self.tools.convertFromMoneroFormat(LastBlock['header']['pricing_record']['unused2'])
-            payload['db_lastblock']['pricing_record']['unused3']=self.tools.convertFromMoneroFormat(LastBlock['header']['pricing_record']['unused3'])
-        if LastBlock24 is not None and 'pricing_record' in payload['db_lastblock24']:
-            payload['db_lastblock24']['pricing_record']['unused1']=self.tools.convertFromMoneroFormat(LastBlock24['header']['pricing_record']['unused1'])
-            payload['db_lastblock24']['pricing_record']['unused2']=self.tools.convertFromMoneroFormat(LastBlock24['header']['pricing_record']['unused2'])
-            payload['db_lastblock24']['pricing_record']['unused3']=self.tools.convertFromMoneroFormat(LastBlock24['header']['pricing_record']['unused3'])
+        if 'currency' not in req.params or ( 'currency' in req.params and req.params['currency']=='xhv'):
+            if 'pricing_record' in payload['db_lastblock']:
+                payload['db_lastblock']['pricing_record']['unused1']=self.tools.convertFromMoneroFormat(LastBlock['header']['pricing_record']['unused1'])
+                payload['db_lastblock']['pricing_record']['unused2']=self.tools.convertFromMoneroFormat(LastBlock['header']['pricing_record']['unused2'])
+                payload['db_lastblock']['pricing_record']['unused3']=self.tools.convertFromMoneroFormat(LastBlock['header']['pricing_record']['unused3'])
+            if LastBlock24 is not None and 'pricing_record' in payload['db_lastblock24']:
+                payload['db_lastblock24']['pricing_record']['unused1']=self.tools.convertFromMoneroFormat(LastBlock24['header']['pricing_record']['unused1'])
+                payload['db_lastblock24']['pricing_record']['unused2']=self.tools.convertFromMoneroFormat(LastBlock24['header']['pricing_record']['unused2'])
+                payload['db_lastblock24']['pricing_record']['unused3']=self.tools.convertFromMoneroFormat(LastBlock24['header']['pricing_record']['unused3'])
 
         #payload['db_lastblock']=LastBlock
         #payload['db_lastblock24']=LastBlock24

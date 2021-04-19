@@ -32,6 +32,8 @@ class CirculationSupplyResource:
         if 'nbDatapoints' in req.params:
             nbDatapoints=int(req.params['nbDatapoints'])
         
+        if 'currency' in req.params:
+            self.currencies=self.mydb.find("currencies",{'xassetcase':req.params['currency'].upper()})
 
         dt_to = datetime.now()
         if 'to' in req.params:
@@ -123,8 +125,10 @@ class CirculationSupplyResource:
                 TmpBlockDeviation['period']=TmpBlock['period']
                 OffShoreFee['period']=TmpBlock['period']
                 
+
                 self.currencies.rewind()
                 for currency in self.currencies:
+                    print (currency)
                     TmpBlock[currency['xasset']]=round(block['cumulative']['supply_offshore'][currency['xasset']],4)
                     if currency['xasset']=='XHV':
                         TmpBlockValue[currency['xasset']]=round(block['cumulative']['supply_offshore'][currency['xasset']]*self.tools.convertFromMoneroFormat(block['pricing_spot_record']['xUSD']),4)
