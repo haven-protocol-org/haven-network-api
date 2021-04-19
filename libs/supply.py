@@ -25,7 +25,7 @@ class CirculationSupplyResource:
         self.tools=libs.utils.tools()
         self.currencies=self.mydb.find("currencies")
     
-    @cache.cached(timeout=60)
+    #@cache.cached(timeout=60)
     def on_get(self, req, resp):
         #If an end timestamp is specified, use this one, or timestamp=now()
         nbDatapoints=50
@@ -133,7 +133,7 @@ class CirculationSupplyResource:
                     if currency['xasset']=='XHV':
                         TmpBlockValue[currency['xasset']]=round(block['cumulative']['supply_offshore'][currency['xasset']]*self.tools.convertFromMoneroFormat(block['pricing_spot_record']['xUSD']),4)
                     else:
-                        TmpBlockValue[currency['xasset']]=TmpBlock[currency['xasset']]
+                        TmpBlockValue[currency['xasset']]=round(TmpBlock[currency['xasset']]/self.tools.convertFromMoneroFormat(block['pricing_spot_record'][currency['xasset']]),4)
                     totalCoins+=TmpBlock[currency['xasset']]
                     totalValue+=TmpBlockValue[currency['xasset']]
 
