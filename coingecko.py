@@ -11,6 +11,7 @@ class Coingecko:
     self.url='https://api.coingecko.com/api/v3/'
     self.mydb= mongodb.Mongodb()
     self.currencies=self.mydb.find('currencies')
+    self.apiKey = os.environ['RateApiKey']
     self.tools = tools()
 
   def getInfo(self,coin):
@@ -116,7 +117,8 @@ class Coingecko:
         ts=datetime.timestamp(dt)
         dateStr = dt.strftime("%Y-%m-%d")
         if dateStr!=PreviousdateStr:
-          url= "https://api.ratesapi.io/api/"+ dateStr +"?base=USD&symbols=AUD,CAD,CHF,CNY,EUR,GBP,JPY,NOK,NZD"
+          url= "http://api.exchangeratesapi.io/v1/"+ dateStr +"?access_key=" + self.apiKey +  "&base=USD&symbols=AUD,CAD,CHF,CNY,EUR,GBP,JPY,NOK,NZD"
+          print (url)
           response = requests.request("get", url)
           exchangesRates=json.loads(response.text)
           PreviousdateStr=dateStr
