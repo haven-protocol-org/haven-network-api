@@ -37,9 +37,9 @@ class Coingecko:
     return response
 
   def importCurrencies(self):
-    currencies={65:"XHV", 66:"xAG", 67:"xAU", 68:"xAUD", 69:"xBTC", 70:"xCAD", 71:"xCHF", 72:"xCNY", 73:"xEUR", 74:"xGBP", 75:"xJPY", 76:"xNOK", 77:"xNZD", 78:"xUSD"}
-    currenciesConvert={'xhv':'xhv','xbtc':'btc','xusd':'usd','xag':"xag", 'xau':'xau', 'xaud':'aud', 'xcad':'cad','xchf':'chf', 'xcny':'cny', 'xeur':'eur', 'xgbp':'gbp', 'xjpy':'jpy', 'xnok':'nok', 'xnzd':'nzd'}
-    currenciesName={'xhv':'Haven','xbtc':'Bitcoin','xusd':'Dollar','xag':"Silver", 'xau':'Gold', 'xaud':'Australian dollar', 'xcad':'Canadian dollar','xchf':'Swiss franc', 'xcny':'Yuan', 'xeur':'Euro', 'xgbp':'Pound sterling', 'xjpy':'Yen', 'xnok':'Norwegian krone', 'xnzd':'New Zealand dollar'}
+    currencies={65:"XHV", 66:"xAG", 67:"xAU", 68:"xAUD", 69:"xBTC", 70:"xCAD", 71:"xCHF", 72:"xCNY", 73:"xEUR", 74:"xGBP", 75:"xJPY", 76:"xLTC", 77:"xNOK", 78:"xNZD", 79:"xUSD"}
+    currenciesConvert={'xhv':'xhv','xbtc':'btc','xusd':'usd','xag':"xag", 'xau':'xau', 'xaud':'aud', 'xcad':'cad','xchf':'chf', 'xcny':'cny', 'xeur':'eur', 'xgbp':'gbp', 'xjpy':'jpy', 'xltc:ltc', 'xnok':'nok', 'xnzd':'nzd'}
+    currenciesName={'xhv':'Haven','xbtc':'Bitcoin','xusd':'Dollar','xag':"Silver", 'xau':'Gold', 'xaud':'Australian dollar', 'xcad':'Canadian dollar','xchf':'Swiss franc', 'xcny':'Yuan', 'xeur':'Euro', 'xgbp':'Pound sterling', 'xjpy':'Yen', 'xltc':'Litecoin', 'xnok':'Norwegian krone', 'xnzd':'New Zealand dollar'}
     for currency in currencies:
       mydict={}
       mydict['xasset']=currencies[currency]
